@@ -54,19 +54,13 @@ public class DataParserLanduTest {
             tmp = bytes[i];
             bytes[i] = (byte) ~tmp;
         }
-        /*byte[] bytes = {(byte) 0xFF,(byte) 0xB4};
-        bytes = DataParserLANDU.reverseByteArray(bytes);*/
         Assert.assertEquals("004b", ByteBufUtil.hexDump(bytes));
     }
 
     @Test
-    public void testByteArray2ToInt() throws Exception {
-        byte[] bytes = {0x00, 0x00, 0x00, 0x4B};
-        ByteBuf buffer = Unpooled.wrappedBuffer(bytes);
-        Assert.assertEquals(75, buffer.getInt(0));
-        buffer.release();
-        /*byte[] bytes = {0x00, 0x4B};
-        Assert.assertEquals(75, DataParserLANDU.byteArray2ToInt(bytes));*/
+    public void testByteArrayToInt() throws Exception {
+        byte[] bytes = {0x00, 0x4B};
+        Assert.assertEquals(75, (bytes[0] & 0xFF) << 8 | (bytes[1] & 0xFF));
     }
 
     @Test

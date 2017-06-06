@@ -52,7 +52,7 @@ public class DataParserLandu implements IDataParser {
     }
 
     @Override
-    public synchronized List<DataPack> extract(ByteBuf buffer){
+    public List<DataPack> extract(ByteBuf buffer){
         /**
          * ## LANDU数据包格式 ##
          * 0,1: 数据包标志(AA55)
@@ -134,7 +134,7 @@ public class DataParserLandu implements IDataParser {
         }
 
         // 扔掉已读数据
-        buffer.discardReadBytes();
+        buffer.discardSomeReadBytes();
 
         return dataPackList;
     }

@@ -16,6 +16,11 @@ import java.util.List;
 public class DataParserLandu implements IDataParser {
 
     /**
+     * 数据包准许最大容量2M
+     */
+    private static final int DISCARDS_MAX_LENGTH = 1024 * 1024 * 2;
+
+    /**
      * 验证数据包
      *
      * @param bytes 原始数据
@@ -66,14 +71,20 @@ public class DataParserLandu implements IDataParser {
         DataPack dataPack;
         List<DataPack> dataPackList = new ArrayList<>();
 
+        // 长度大于2M的数据包直接抛弃(恶意数据)
+        if(DISCARDS_MAX_LENGTH < buffer.readableBytes()) {
+            //System.out.println("clear");
+            buffer.clear();
+        }
+
         // 遍历
         boolean skipFlag;
         int offset, max, length, sum, sumCheck;
-        while(buffer.readerIndex() < buffer.writerIndex()) {
+        while(buffer.isReadable()) {
             skipFlag = true;
             offset = buffer.readerIndex();
             max = buffer.writerIndex();
-            //System.out.printf("%d-%s: ", offset, DatatypeConverter.printHexBinary(new byte[]{buffer.getByte(offset)}));
+            //System.out.printf("%d-%s: ", offset, ByteBufUtil.hexDump(new byte[]{buffer.getByte(offset)}));
             // 一个包最小10个字节
             if(10 < (max - offset)) {
                 // 判断数据包标志
@@ -82,11 +93,12 @@ public class DataParserLandu implements IDataParser {
                     if(buffer.getByte(offset +2) == ~buffer.getByte(offset + 4)
                             && buffer.getByte(offset + 3) == ~buffer.getByte(offset + 5)) {
                         length = (buffer.getByte(offset + 2) & 0xFF) << 8 | (buffer.getByte(offset + 3) & 0xFF);
+                        //System.out.printf(" | length: %d", length);
                         // 检验包是否完整(length + 2)
                         if(length <= (max - offset - 2)) {
                             // 检验校验和
                             sum = 0;
-                            sumCheck = (buffer.getByte(offset + length) & 0xFF) << 8 | (buffer.getByte(offset + length + 1));
+                            sumCheck = (buffer.getByte(offset + length) & 0xFF) << 8 | (buffer.getByte(offset + length + 1) & 0xFF);
                             // 求和
                             for (int i = offset + 2, n = offset + length; i < n; i++) {
                                 sum += (buffer.getByte(i) & 0xFF);

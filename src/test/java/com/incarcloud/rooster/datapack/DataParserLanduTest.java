@@ -106,4 +106,26 @@ public class DataParserLanduTest {
         ByteBuf responseBuf = parser.createResponse(parser.extract(buffer).get(0), ERespReason.OK);
         Assert.assertEquals("AA55000BFFF41C05160600023B", DatatypeConverter.printHexBinary(ByteBufUtil.getBytes(responseBuf, 0, responseBuf.readableBytes())));
     }
+
+//    private byte[] getBytes() throws IOException {
+//        String desktopPath = System.getProperty("user.home") + File.separator + "Desktop";
+//        FileInputStream fis = new FileInputStream(new File(desktopPath, "vehicle.dat"));
+//        byte[] input = new byte[fis.available()];
+//        fis.read(input);
+//        fis.close();
+//        return input;
+//    }
+//
+//    @Test
+//    public void testExtract2() throws Exception {
+//        byte[] array = getBytes();
+//        ByteBuf buffer = Unpooled.wrappedBuffer(array);
+//
+//        IDataParser parser = new DataParserLandu();
+//        List<DataPack> dataPackList = parser.extract(buffer);
+//        System.err.println(array.length);
+//        System.out.println(dataPackList.size());
+//
+//        buffer.release();
+//    }
 }

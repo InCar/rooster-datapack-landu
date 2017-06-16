@@ -40,7 +40,7 @@ public class DataParserLandu implements IDataParser {
                         if(length == (total - 2)) {
                             // 4.校验和校验
                             int sum = 0;
-                            int sumCheck = (bytes[total-2] & 0xFF) << 8 | (bytes[total-1]);
+                            int sumCheck = (bytes[total-2] & 0xFF) << 8 | (bytes[total-1] & 0xFF);
                             for (int i = 2; i < total - 2; i++) {
                                 sum += (bytes[i] & 0xFF);
                             }

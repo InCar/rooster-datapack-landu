@@ -15,6 +15,14 @@ import java.util.List;
  */
 public class DataParserLandu implements IDataParser {
 
+    static {
+        /**
+         * 声明数据包版本与解析器类关系
+         */
+        /*DataParserManager.register("china-landu-2.05", DataParserManager.class);*/
+        DataParserManager.register("china-landu-3.08", DataParserManager.class);
+    }
+
     /**
      * 数据包准许最大容量2M
      */
@@ -211,5 +219,10 @@ public class DataParserLandu implements IDataParser {
         if(null != responseBuf) {
             responseBuf.release();
         }
+    }
+
+    @Override
+    public List<DataPackTarget> extractBody(DataPack dataPack) {
+        return null;
     }
 }

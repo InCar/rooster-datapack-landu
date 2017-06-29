@@ -80,17 +80,52 @@ public class LanduDataPackUtil extends DataPackUtil {
 
     /**
      * 读取一个时间类型数据<br>
-     *     时间字符串格式必须是
+     *     时间字符串格式必须是yyyy-MM-dd HH:mm:ss
      *
-     * @param buffer
-     * @return
+     * @param buffer ByteBuf
+     * @return Date
      */
     public static Date readDate(ByteBuf buffer) throws UnsupportedEncodingException, ParseException {
-        String dataString = readString(buffer);
+        return  formatDateString(readString(buffer));
+    }
+
+    /**
+     * 将字符串时间转时间对象<br>
+     *     时间字符串格式必须是yyyy-MM-dd HH:mm:ss
+     *
+     * @param dataString 时间字符串
+     * @return Date
+     */
+    public static Date formatDateString(String dataString) throws ParseException {
         if(null != dataString && !"".equals(dataString.trim())) {
             return dateFormat.parse(dataString);
         }
-        return  null;
+        return null;
+    }
+
+    /**
+     * 格式化位置字符串<br>
+     *     示例：E116.362946,N40.079099,0,2014-09-04 16:19:28,2
+     *
+     * @param buffer ByteBuf
+     * @return string array
+     */
+    public static String[] splitPositionString(ByteBuf buffer) throws UnsupportedEncodingException {
+        return splitPositionString(readString(buffer));
+    }
+
+    /**
+     * 格式化位置字符串<br>
+     *     示例：E116.362946,N40.079099,0,2014-09-04 16:19:28,2
+     *
+     * @param positionString 位置字符串
+     * @return string array
+     */
+    public static String[] splitPositionString(String positionString) {
+        if(null == positionString && !positionString.contains(",")) {
+            throw new IllegalArgumentException("positionString is illegal string");
+        }
+        return positionString.split(",");
     }
 
     protected LanduDataPackUtil() {

@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -273,6 +274,51 @@ public class DataParserLandu implements IDataParser {
                         dataTarget.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
                         dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
+
+                        // 6.车辆状态
+                        switch (LanduDataPackUtil.readByte(buffer)) {
+                            case 0x01:
+                                // 0x01-发动机点火时
+                                System.out.println("## 发动机点火时");
+                                // 6.1 启动电压
+                                String firingVoltage = LanduDataPackUtil.readString(buffer);
+                                System.out.printf("firingVoltageValue: %s V\n", firingVoltage);
+                                // 6.1 车速
+                                String speed = LanduDataPackUtil.readString(buffer);
+                                System.out.printf("speed: %s km/h\n", speed);
+                                // 6.2 当前行程行驶距离
+                                String travelDistance = LanduDataPackUtil.readString(buffer);
+                                System.out.printf("travelDistance: %s m\n", travelDistance);
+                                // 6.3 定位信息
+                                String[] positions = LanduDataPackUtil.splitPositionString(buffer);
+                                String longitude = positions[0];
+                                System.out.println("longitude: " + longitude);
+                                String latitude = positions[1];
+                                System.out.println("latitude: " + latitude);
+                                float direction = Float.parseFloat(positions[2]);
+                                System.out.println("direction: " + direction);
+                                Date positionDate = LanduDataPackUtil.formatDateString(positions[3]);
+                                System.out.println(positionDate);
+                                int positionMode = Integer.parseInt(positions[4]);
+                                System.out.println("positionMode: " + positionMode);
+                                break;
+                            case 0x02:
+                                // 0x02-发动机运行中
+                                System.out.println("## 发动机运行中");
+                                break;
+                            case 0x03:
+                                // 0x03-发动机熄火时
+                                System.out.println("## 发动机熄火时");
+                                break;
+                            case 0x04:
+                                // 0x04-发动机熄火后
+                                System.out.println("## 发动机熄火后");
+                                break;
+                            case 0x05:
+                                // 0x05-车辆不能检测
+                                System.out.println("## 车辆不能检测");
+                                break;
+                        }
 
                         break;
                     case 0x1602:

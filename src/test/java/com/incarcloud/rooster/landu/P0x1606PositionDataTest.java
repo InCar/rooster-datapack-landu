@@ -1,6 +1,6 @@
 package com.incarcloud.rooster.landu;
 
-import com.incarcloud.rooster.datapack.util.DataPackUtil;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
@@ -55,25 +55,25 @@ public class P0x1606PositionDataTest {
             buffer.skipBytes(2);
 
             // 3.OBD 串号（设备号）
-            String obdCode = DataPackUtil.readString(buffer);
+            String obdCode = LanduDataPackUtil.readString(buffer);
             System.out.printf("obdCode: %s\n", obdCode);
 
             // 4.TripID
-            int tripId = DataPackUtil.readDWord(buffer);
+            long tripId = LanduDataPackUtil.readDWord(buffer);
             System.out.printf("tripId: %d\n", tripId);
 
             // 5.VID
-            String vid = DataPackUtil.readString(buffer);
+            String vid = LanduDataPackUtil.readString(buffer);
             System.out.printf("vid: %s\n", vid);
 
             // 6.VIN码
-            String vin = DataPackUtil.readString(buffer);
+            String vin = LanduDataPackUtil.readString(buffer);
             System.out.printf("vin: %s\n", vin);
 
             // 7.数据内容
             // 【数据内容】：：=【定位数据个数】+【【定位信息】+…】
             // 7.1 定位数据个数
-            int locationDataTotal = DataPackUtil.readWord(buffer);
+            int locationDataTotal = LanduDataPackUtil.readWord(buffer);
             System.out.printf("locationDataTotal: %d\n", locationDataTotal);
             // 7.2 定位信息
             // 数据格式：【定位信息】::=【车速】+【当前行程行驶距离】+【经度】+【分割符】+【纬度】+【分割符】+【方向】+【分割符】+【定位时间】+【分割符】+【定位方式】
@@ -83,31 +83,31 @@ public class P0x1606PositionDataTest {
             for (int i = 0; i < locationDataTotal; i++) {
                 System.out.printf("## %d\n", (i+1));
                 // 7.2.1 车速
-                speed = DataPackUtil.readString(buffer);
+                speed = LanduDataPackUtil.readString(buffer);
                 System.out.printf("speed: %s\n", speed);
 
                 // 7.2.2 当前行程行驶距离
-                travelDistance = DataPackUtil.readString(buffer);
+                travelDistance = LanduDataPackUtil.readString(buffer);
                 System.out.printf("travelDistance: %s\n", travelDistance);
 
-                // 7.2.3 经度
-                longitude = DataPackUtil.readStringEmic(buffer);
-                System.out.printf("longitude: %s\n", longitude);
-
-                // 7.2.4 纬度
-                latitude = DataPackUtil.readStringEmic(buffer);
-                System.out.printf("latitude: %s\n", latitude);
-
-                // 7.2.5 方向
-                direction = DataPackUtil.readStringEmic(buffer);
-                System.out.printf("direction: %s\n", direction);
-
-                // 7.2.6 定位时间
-                locationDate = DataPackUtil.readStringEmic(buffer);
-                System.out.printf("locationDate: %s\n", locationDate);
+//                // 7.2.3 经度
+//                longitude = LanduDataPackUtil.readStringEmic(buffer);
+//                System.out.printf("longitude: %s\n", longitude);
+//
+//                // 7.2.4 纬度
+//                latitude = LanduDataPackUtil.readStringEmic(buffer);
+//                System.out.printf("latitude: %s\n", latitude);
+//
+//                // 7.2.5 方向
+//                direction = LanduDataPackUtil.readStringEmic(buffer);
+//                System.out.printf("direction: %s\n", direction);
+//
+//                // 7.2.6 定位时间
+//                locationDate = LanduDataPackUtil.readStringEmic(buffer);
+//                System.out.printf("locationDate: %s\n", locationDate);
 
                 // 7.2.7 定位方式
-                locationMode = DataPackUtil.readString(buffer);
+                locationMode = LanduDataPackUtil.readString(buffer);
                 System.out.printf("locationMode: %s\n", locationMode);
             }
         }

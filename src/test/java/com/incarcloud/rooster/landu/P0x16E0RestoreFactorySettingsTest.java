@@ -1,6 +1,6 @@
 package com.incarcloud.rooster.landu;
 
-import com.incarcloud.rooster.datapack.util.DataPackUtil;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -57,23 +57,23 @@ public class P0x16E0RestoreFactorySettingsTest {
             buffer.skipBytes(2);
 
             // 3.OBD 串号（设备号）
-            String obdCode = DataPackUtil.readString(buffer);
+            String obdCode = LanduDataPackUtil.readString(buffer);
             System.out.printf("obdCode: %s\n", obdCode);
 
             // 4.TripID
-            int tripId = DataPackUtil.readDWord(buffer);
+            long tripId = LanduDataPackUtil.readDWord(buffer);
             System.out.printf("tripId: %d\n", tripId);
 
             // 5.VID
-            String vid = DataPackUtil.readString(buffer);
+            String vid = LanduDataPackUtil.readString(buffer);
             System.out.printf("vid: %s\n", vid);
 
             // 6.VIN码
-            String vin = DataPackUtil.readString(buffer);
+            String vin = LanduDataPackUtil.readString(buffer);
             System.out.printf("vin: %s\n", vin);
 
             // 7.错误代码
-            int faultCode = DataPackUtil.readByte(buffer);
+            int faultCode = LanduDataPackUtil.readByte(buffer);
             System.out.printf("faultCode: 0x%s\n", ByteBufUtil.hexDump(new byte[]{(byte) (faultCode & 0xFF)}));
 
         }

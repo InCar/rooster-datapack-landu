@@ -1,6 +1,6 @@
 package com.incarcloud.rooster.landu;
 
-import com.incarcloud.rooster.datapack.util.DataPackUtil;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -56,23 +56,23 @@ public class P0x1608IdlingDataTest {
             buffer.skipBytes(2);
 
             // 3.OBD 串号（设备号）
-            String obdCode = DataPackUtil.readString(buffer);
+            String obdCode = LanduDataPackUtil.readString(buffer);
             System.out.printf("obdCode: %s\n", obdCode);
 
             // 4.TripID
-            int tripId = DataPackUtil.readDWord(buffer);
+            long tripId = LanduDataPackUtil.readDWord(buffer);
             System.out.printf("tripId: %d\n", tripId);
 
             // 5.VID
-            String vid = DataPackUtil.readString(buffer);
+            String vid = LanduDataPackUtil.readString(buffer);
             System.out.printf("vid: %s\n", vid);
 
             // 6.VIN码
-            String vin = DataPackUtil.readString(buffer);
+            String vin = LanduDataPackUtil.readString(buffer);
             System.out.printf("vin: %s\n", vin);
 
             // 7.取得检测数据时间戳
-            String receiveDate = DataPackUtil.readString(buffer);
+            String receiveDate = LanduDataPackUtil.readString(buffer);
             System.out.printf("receiveDate: %s\n", receiveDate);
 
             // 8.数据内容
@@ -80,7 +80,7 @@ public class P0x1608IdlingDataTest {
             // 8.1 故障码
             // 格式：【故障码】::=【故障码列表】::=【故障码个数】+【【【故障码】+【故障码属性】+【故障码描述】】+……】
             // 8.1.1 故障码个数
-            int troubleCodeTotal = DataPackUtil.readByte(buffer);
+            int troubleCodeTotal = LanduDataPackUtil.readByte(buffer);
             System.out.printf("troubleCodeTotal: %d\n", troubleCodeTotal);
 
             // 8.1.2 故障码内容
@@ -88,11 +88,11 @@ public class P0x1608IdlingDataTest {
             String troubleCode, troubleAttr, troubleDesc;
             for(int i = 0; i < troubleCodeTotal; i++) {
                 // 8.1.2.1 故障码
-                troubleCode = DataPackUtil.readString(buffer);
+                troubleCode = LanduDataPackUtil.readString(buffer);
                 // 8.1.2.2 故障码属性
-                troubleAttr = DataPackUtil.readString(buffer);
+                troubleAttr = LanduDataPackUtil.readString(buffer);
                 // 8.1.2.3 故障码描述
-                troubleDesc = DataPackUtil.readString(buffer);
+                troubleDesc = LanduDataPackUtil.readString(buffer);
                 // 打印
                 System.out.printf("%d-(troubleCode: %s, troubleAttr: %s, troubleDesc: %s)\n", (i+1), troubleCode, troubleAttr, troubleDesc);
             }
@@ -100,7 +100,7 @@ public class P0x1608IdlingDataTest {
             // 8.2 实时数据流(车况信息)
             // 格式：【实时数据流(车况信息)】::=【数据流个数】+【数据流内容】
             // 8.2.1 数据流个数
-            int vehicleConditionTotal = DataPackUtil.readWord(buffer);
+            int vehicleConditionTotal = LanduDataPackUtil.readWord(buffer);
             System.out.printf("vehicleConditionTotal: %d\n", vehicleConditionTotal);
 
             // 8.2.1 数据流内容
@@ -108,8 +108,8 @@ public class P0x1608IdlingDataTest {
             int vehicleConditionId;
             String vehicleConditionContent;
             for(int i = 0; i < vehicleConditionTotal; i++) {
-                vehicleConditionId = DataPackUtil.readWord(buffer);
-                vehicleConditionContent = DataPackUtil.readString(buffer);
+                vehicleConditionId = LanduDataPackUtil.readWord(buffer);
+                vehicleConditionContent = LanduDataPackUtil.readString(buffer);
                 System.out.printf("%d-(vehicleConditionId: 0x%s, vehicleConditionContent: %s)\n", (i+1), ByteBufUtil.hexDump(new byte[]{(byte) ((vehicleConditionId >> 8) & 0xFF), (byte) (vehicleConditionId & 0xFF)}), vehicleConditionContent);
             }
         }

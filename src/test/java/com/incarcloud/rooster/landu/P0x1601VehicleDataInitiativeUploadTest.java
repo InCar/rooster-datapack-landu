@@ -1,6 +1,6 @@
 package com.incarcloud.rooster.landu;
 
-import com.incarcloud.rooster.datapack.util.DataPackUtil;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -56,29 +56,29 @@ public class P0x1601VehicleDataInitiativeUploadTest {
             buffer.skipBytes(2);
 
             // 3.远程诊断仪串号（设备号）
-            String obdCode = DataPackUtil.readString(buffer);
+            String obdCode = LanduDataPackUtil.readString(buffer);
             System.out.printf("obdCode: %s\n", obdCode);
 
             // 4.TripID-4个字节
-            int tripId = DataPackUtil.readDWord(buffer);
+            long tripId = LanduDataPackUtil.readDWord(buffer);
             System.out.printf("tripId: %d\n", tripId);
 
             // 5.VID
             // 扫描字符串
-            String vid = DataPackUtil.readString(buffer);
+            String vid = LanduDataPackUtil.readString(buffer);
             System.out.printf("vid: %s\n", vid);
 
             // 5.VIN
             // 扫描字符串
-            String vin = DataPackUtil.readString(buffer);
+            String vin = LanduDataPackUtil.readString(buffer);
             System.out.printf("vin: %s\n", vin);
 
             // 6.取得检测数据时间戳
-            String receiveDate = DataPackUtil.readString(buffer);
+            String receiveDate = LanduDataPackUtil.readString(buffer);
             System.out.printf("receiveDate: %s\n", receiveDate);
 
             // 7.数据属性标识
-            int dataAttrType = DataPackUtil.readByte(buffer);
+            int dataAttrType = LanduDataPackUtil.readByte(buffer);
             switch (dataAttrType) {
                 case 0x01:
                     // 7.1 0x01-发动机点火时
@@ -86,37 +86,37 @@ public class P0x1601VehicleDataInitiativeUploadTest {
                     System.out.println("## 0x01-发动机点火时");
 
                     // 7.1.1 点火电源
-                    String firingVoltageValue = DataPackUtil.readString(buffer);
+                    String firingVoltageValue = LanduDataPackUtil.readString(buffer);
                     System.out.printf("firingVoltageValue: %skm/h\n", firingVoltageValue);
 
                     // 7.1.2 定位信息
                     // 数据格式：【定位信息】::=【车速】+【当前行程行驶距离】+【经度】+【分割符】+【纬度】+【分割符】+【方向】+【分割符】+【定位时间】+【分割符】+【定位方式】
                     // 7.1.2.1 车速
-                    String speed = DataPackUtil.readString(buffer);
+                    String speed = LanduDataPackUtil.readString(buffer);
                     System.out.printf("speed: %s\n", speed);
 
                     // 7.1.2.2 当前行程行驶距离
-                    String travelDistance = DataPackUtil.readString(buffer);
+                    String travelDistance = LanduDataPackUtil.readString(buffer);
                     System.out.printf("travelDistance: %s\n", travelDistance);
 
-                    // 7.1.2.3 经度
-                    String longitude = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("longitude: %s\n", longitude);
-
-                    // 7.1.2.4 纬度
-                    String latitude = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("latitude: %s\n", latitude);
-
-                    // 7.1.2.5 方向
-                    String direction = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("direction: %s\n", direction);
-
-                    // 7.1.2.6 定位时间
-                    String locationDate = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("locationDate: %s\n", locationDate);
+//                    // 7.1.2.3 经度
+//                    String longitude = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("longitude: %s\n", longitude);
+//
+//                    // 7.1.2.4 纬度
+//                    String latitude = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("latitude: %s\n", latitude);
+//
+//                    // 7.1.2.5 方向
+//                    String direction = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("direction: %s\n", direction);
+//
+//                    // 7.1.2.6 定位时间
+//                    String locationDate = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("locationDate: %s\n", locationDate);
 
                     // 7.1.2.7 定位方式
-                    String locationMode = DataPackUtil.readString(buffer);
+                    String locationMode = LanduDataPackUtil.readString(buffer);
                     System.out.printf("locationMode: %s\n", locationMode);
 
                     break;
@@ -126,15 +126,15 @@ public class P0x1601VehicleDataInitiativeUploadTest {
                     System.out.println("## 0x02-发动机运行中");
 
                     // 7.2.1 参数数量
-                    int paramsTotal = DataPackUtil.readWord(buffer);
+                    int paramsTotal = LanduDataPackUtil.readWord(buffer);
                     System.out.printf("paramsTotal: %d\n", paramsTotal);
 
                     // 7.2.1 参数键值对
                     int testingId;
                     String testingValue;
                     for(int i = 0; i < paramsTotal; i++) {
-                        testingId = DataPackUtil.readWord(buffer);
-                        testingValue = DataPackUtil.readString(buffer);
+                        testingId = LanduDataPackUtil.readWord(buffer);
+                        testingValue = LanduDataPackUtil.readString(buffer);
                         System.out.printf("%d-(testingId: 0x%s, testingValue: %s)\n", (i + 1), ByteBufUtil.hexDump(new byte[]{(byte) ((testingId >> 8) & 0xFF), (byte) (testingId & 0xFF)}), testingValue);
                     }
                     break;
@@ -145,87 +145,87 @@ public class P0x1601VehicleDataInitiativeUploadTest {
 
                     // 7.3.1 【本行程数据小计】::=【本次发动机运行时间】+【本次行驶距离】+【本次平均油耗】+【累计行驶里程】+【累计平均油耗】
                     // 7.3.1.1 本次发动机运行时间
-                    int runningSeconds = DataPackUtil.readWord(buffer);
+                    int runningSeconds = LanduDataPackUtil.readWord(buffer);
                     System.out.printf("runningSeconds: %ds\n", runningSeconds);
 
                     // 7.3.1.2 本次行驶距离
-                    int runningMeters = DataPackUtil.readLong(buffer);
+                    int runningMeters = LanduDataPackUtil.readLong(buffer);
                     System.out.printf("runningMeters: %dm\n", runningMeters);
 
                     // 7.3.1.3 本次平均油耗
-                    int runningOilUsed = DataPackUtil.readWord(buffer);
+                    int runningOilUsed = LanduDataPackUtil.readWord(buffer);
                     System.out.printf("runningOilUsed: %d\n", runningOilUsed);
 
                     // 7.3.1.4 累计行驶里程
-                    int runningTotalKilometers = DataPackUtil.readLong(buffer);
+                    int runningTotalKilometers = LanduDataPackUtil.readLong(buffer);
                     System.out.printf("runningTotalKilometers: %d\n", runningTotalKilometers);
 
                     // 7.3.1.5 累计平均油耗
-                    int runningAvgOilUsed = DataPackUtil.readWord(buffer);
+                    int runningAvgOilUsed = LanduDataPackUtil.readWord(buffer);
                     System.out.printf("runningAvgOilUsed: %d\n", runningAvgOilUsed);
 
                     // 7.3.2 【本行程车速分组统计】::=【数据组数】+【第 1 组数据】+...+【第 n 组数据】
                     // 7.3.2.1 数据组数
-                    int dataArrayTotal = DataPackUtil.readByte(buffer);
+                    int dataArrayTotal = LanduDataPackUtil.readByte(buffer);
                     System.out.printf("dataArrayTotal: %d\n", dataArrayTotal);
 
                     // 7.3.2.1 第i组数据
                     int runningSpeed, runningTimeUsed, runningDistance;
                     for (int i = 0; i < dataArrayTotal; i++) {
-                        runningSpeed = DataPackUtil.readByte(buffer);
-                        runningTimeUsed = DataPackUtil.readWord(buffer);
-                        runningDistance = DataPackUtil.readLong(buffer);
+                        runningSpeed = LanduDataPackUtil.readByte(buffer);
+                        runningTimeUsed = LanduDataPackUtil.readWord(buffer);
+                        runningDistance = LanduDataPackUtil.readLong(buffer);
                         System.out.printf("%d-(runningSpeed: %d, runningTimeUsed: %d, runningDistance: %d)\n", (i+1), runningSpeed, runningTimeUsed, runningDistance);
                     }
 
                     // 7.3.3 【驾驶习惯统计】::=【本次急加速次数】+【本次急减速次数】+【本次急转向次数】+【本次超速行驶时间】+【最高车速】
                     // 7.3.3.1 本次急加速次数
-                    int thisAddSpeedTimes = DataPackUtil.readWord(buffer);
+                    int thisAddSpeedTimes = LanduDataPackUtil.readWord(buffer);
                     System.out.printf("thisAddSpeedTimes: %d\n", thisAddSpeedTimes);
 
                     // 7.3.3.2 本次急减速次数
-                    int thisReduceSpeedTimes = DataPackUtil.readWord(buffer);
+                    int thisReduceSpeedTimes = LanduDataPackUtil.readWord(buffer);
                     System.out.printf("thisReduceSpeedTimes: %d\n", thisReduceSpeedTimes);
 
                     // 7.3.3.3 本次急转向次数
-                    int thisChangeDirectionTimes = DataPackUtil.readWord(buffer);
+                    int thisChangeDirectionTimes = LanduDataPackUtil.readWord(buffer);
                     System.out.printf("thisChangeDirectionTimes: %d\n", thisChangeDirectionTimes);
 
                     // 7.3.3.4 本次超速行驶时间
-                    int thisSpeedingDriveTime = DataPackUtil.readLong(buffer);
+                    int thisSpeedingDriveTime = LanduDataPackUtil.readLong(buffer);
                     System.out.printf("thisSpeedingDriveTime: %d\n", thisSpeedingDriveTime);
 
                     // 7.3.3.5 最高车速
-                    int thisHighSpeed = DataPackUtil.readByte(buffer);
+                    int thisHighSpeed = LanduDataPackUtil.readByte(buffer);
                     System.out.printf("thisHighSpeed: %d\n", thisHighSpeed);
 
                     // 7.3.4 【定位信息】::=【车速】+【当前行程行驶距离】+【经度】+【分割符】+【纬度】+【分割符】+【方向】+【分割符】+【定位时间】+【分割符】+【定位方式】
                     // 7.3.4.1 车速
-                    speed = DataPackUtil.readString(buffer);
+                    speed = LanduDataPackUtil.readString(buffer);
                     System.out.printf("speed: %s\n", speed);
 
                     // 7.3.4.2 当前行程行驶距离
-                    travelDistance = DataPackUtil.readString(buffer);
+                    travelDistance = LanduDataPackUtil.readString(buffer);
                     System.out.printf("travelDistance: %s\n", travelDistance);
 
-                    // 7.3.4.3 经度
-                    longitude = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("longitude: %s\n", longitude);
-
-                    // 7.3.4.4 纬度
-                    latitude = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("latitude: %s\n", latitude);
-
-                    // 7.3.4.5 方向
-                    direction = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("direction: %s\n", direction);
-
-                    // 7.3.4.6 定位时间
-                    locationDate = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("locationDate: %s\n", locationDate);
+//                    // 7.3.4.3 经度
+//                    longitude = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("longitude: %s\n", longitude);
+//
+//                    // 7.3.4.4 纬度
+//                    latitude = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("latitude: %s\n", latitude);
+//
+//                    // 7.3.4.5 方向
+//                    direction = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("direction: %s\n", direction);
+//
+//                    // 7.3.4.6 定位时间
+//                    locationDate = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("locationDate: %s\n", locationDate);
 
                     // 7.3.4.7 定位方式
-                    locationMode = DataPackUtil.readString(buffer);
+                    locationMode = LanduDataPackUtil.readString(buffer);
                     System.out.printf("locationMode: %s\n", locationMode);
                     break;
                 case 0x04:
@@ -233,7 +233,7 @@ public class P0x1601VehicleDataInitiativeUploadTest {
                     // 数据格式: 【数据内容】::=【蓄电池电压值】
                     System.out.println("## 0x04-发动机熄火后");
                     // 7.4.1
-                    String batteryVoltage = DataPackUtil.readString(buffer);
+                    String batteryVoltage = LanduDataPackUtil.readString(buffer);
                     System.out.printf("batteryVoltage: %s\n", batteryVoltage);
                     break;
                 case 0x05:

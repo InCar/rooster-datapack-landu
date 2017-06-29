@@ -1,6 +1,6 @@
 package com.incarcloud.rooster.landu;
 
-import com.incarcloud.rooster.datapack.util.DataPackUtil;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
@@ -55,27 +55,27 @@ public class P0x160AUploadVehicleDataTest {
             buffer.skipBytes(2);
 
             // 3.OBD 串号（设备号）
-            String obdCode = DataPackUtil.readString(buffer);
+            String obdCode = LanduDataPackUtil.readString(buffer);
             System.out.printf("obdCode: %s\n", obdCode);
 
             // 4.TripID
-            int tripId = DataPackUtil.readDWord(buffer);
+            long tripId = LanduDataPackUtil.readDWord(buffer);
             System.out.printf("tripId: %d\n", tripId);
 
             // 5.VID
-            String vid = DataPackUtil.readString(buffer);
+            String vid = LanduDataPackUtil.readString(buffer);
             System.out.printf("vid: %s\n", vid);
 
             // 6.VIN码
-            String vin = DataPackUtil.readString(buffer);
+            String vin = LanduDataPackUtil.readString(buffer);
             System.out.printf("vin: %s\n", vin);
 
             // 7.取得检测数据时间戳
-            String receiveDate = DataPackUtil.readString(buffer);
+            String receiveDate = LanduDataPackUtil.readString(buffer);
             System.out.printf("receiveDate: %s\n", receiveDate);
 
             // 8.数据类型
-            int dataType = DataPackUtil.readByte(buffer);
+            int dataType = LanduDataPackUtil.readByte(buffer);
             System.out.printf("dataType: %d\n", dataType);
 
             // 9.上传数据内容
@@ -108,31 +108,31 @@ public class P0x160AUploadVehicleDataTest {
 
                     // 10.2 定位信息
                     // 10.1 车速
-                    String speed = DataPackUtil.readString(buffer);
+                    String speed = LanduDataPackUtil.readString(buffer);
                     System.out.printf("speed: %s\n", speed);
 
-                    // 10.2 当前行程行驶距离
-                    String travelDistance = DataPackUtil.readString(buffer);
-                    System.out.printf("travelDistance: %s\n", travelDistance);
-
-                    // 10.3 经度
-                    String longitude = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("longitude: %s\n", longitude);
-
-                    // 10.4 纬度
-                    String latitude = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("latitude: %s\n", latitude);
-
-                    // 10.5 方向
-                    String direction = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("direction: %s\n", direction);
-
-                    // 10.6 定位时间
-                    String locationDate = DataPackUtil.readStringEmic(buffer);
-                    System.out.printf("locationDate: %s\n", locationDate);
+//                    // 10.2 当前行程行驶距离
+//                    String travelDistance = LanduDataPackUtil.readString(buffer);
+//                    System.out.printf("travelDistance: %s\n", travelDistance);
+//
+//                    // 10.3 经度
+//                    String longitude = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("longitude: %s\n", longitude);
+//
+//                    // 10.4 纬度
+//                    String latitude = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("latitude: %s\n", latitude);
+//
+//                    // 10.5 方向
+//                    String direction = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("direction: %s\n", direction);
+//
+//                    // 10.6 定位时间
+//                    String locationDate = LanduDataPackUtil.readStringEmic(buffer);
+//                    System.out.printf("locationDate: %s\n", locationDate);
 
                     // 10.7 定位方式
-                    String locationMode = DataPackUtil.readString(buffer);
+                    String locationMode = LanduDataPackUtil.readString(buffer);
                     System.out.printf("locationMode: %s\n", locationMode);
                     break;
                 case 0xF0:

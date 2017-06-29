@@ -1,6 +1,6 @@
 package com.incarcloud.rooster.landu;
 
-import com.incarcloud.rooster.datapack.util.DataPackUtil;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -56,29 +56,29 @@ public class P0x1607FreezeFrameTest {
             buffer.skipBytes(2);
 
             // 3.OBD 串号（设备号）
-            String obdCode = DataPackUtil.readString(buffer);
+            String obdCode = LanduDataPackUtil.readString(buffer);
             System.out.printf("obdCode: %s\n", obdCode);
 
             // 4.TripID
-            int tripId = DataPackUtil.readDWord(buffer);
+            long tripId = LanduDataPackUtil.readDWord(buffer);
             System.out.printf("tripId: %d\n", tripId);
 
             // 5.VID
-            String vid = DataPackUtil.readString(buffer);
+            String vid = LanduDataPackUtil.readString(buffer);
             System.out.printf("vid: %s\n", vid);
 
             // 6.VIN码
-            String vin = DataPackUtil.readString(buffer);
+            String vin = LanduDataPackUtil.readString(buffer);
             System.out.printf("vin: %s\n", vin);
 
             // 7.取得检测数据时间戳
-            String receiveDate = DataPackUtil.readString(buffer);
+            String receiveDate = LanduDataPackUtil.readString(buffer);
             System.out.printf("receiveDate: %s\n", receiveDate);
 
             // 8.数据内容
             // 格式：【数据内容】::=【冻结帧个数】+【冻结帧内容】
             // 8.1 冻结帧个数
-            int freezeFrameTotal = DataPackUtil.readWord(buffer);
+            int freezeFrameTotal = LanduDataPackUtil.readWord(buffer);
             System.out.printf("freezeFrameTotal: %s\n", freezeFrameTotal);
 
             // 8.2 冻结帧内容
@@ -86,8 +86,8 @@ public class P0x1607FreezeFrameTest {
             int freezeFrameId;
             String freezeFrameContent;
             for (int i = 0; i < freezeFrameTotal; i++) {
-                freezeFrameId = DataPackUtil.readWord(buffer);
-                freezeFrameContent = DataPackUtil.readString(buffer);
+                freezeFrameId = LanduDataPackUtil.readWord(buffer);
+                freezeFrameContent = LanduDataPackUtil.readString(buffer);
                 System.out.printf("%d-(freezeFrameId: 0x%s, freezeFrameContent: %s)\n", (i+1), ByteBufUtil.hexDump(new byte[]{(byte) ((freezeFrameId >> 8) & 0xFF), (byte) (freezeFrameId & 0xFF)}), freezeFrameContent);
             }
         }

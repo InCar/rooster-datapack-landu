@@ -1,5 +1,6 @@
 package com.incarcloud.rooster.datapack;
 
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -223,6 +224,93 @@ public class DataParserLandu implements IDataParser {
 
     @Override
     public List<DataPackTarget> extractBody(DataPack dataPack) {
-        return null;
+        List<DataPackTarget> dataPackTargetList = null;
+        byte[] dataPackBytes = Base64.getDecoder().decode(dataPack.getDataB64());
+        if(validate(dataPackBytes)) {
+            // ByteBuf
+            ByteBuf buffer = null;
+            try {
+                // 初始化ByteBuf
+                buffer = Unpooled.wrappedBuffer(dataPackBytes);
+
+                // 跳过“标志+长度+长度校验”6个字节
+                LanduDataPackUtil.readBytes(buffer, 6);
+
+                // 数据包ID
+                int packId = LanduDataPackUtil.readByte(buffer);
+                System.out.printf("packId: %d\n", packId);
+
+                // 协议格式版本
+                String version;
+                switch (LanduDataPackUtil.readByte(buffer)) {
+                    case 0x02:
+                        version = "2.05";
+                        break;
+                    case 0x05:
+                        version = "3.08";
+                        break;
+                    default:
+                        version = "unknown";
+                }
+                System.out.printf("version: %s\n", version);
+
+                // 命令字
+                dataPackTargetList = new ArrayList<>();
+                switch (LanduDataPackUtil.readUInt2(buffer)) {
+                    case 0x1601:
+                        System.out.println("## 0x1601 - 3.1.1 车辆检测数据主动上传");
+                        break;
+                    case 0x1602:
+                        System.out.println("## 0x1602 - 3.1.2 上传车辆报警");
+                        break;
+                    case 0x1603:
+                        System.out.println("## 0x1603 - 3.1.3 从服务器取得参数");
+                        break;
+                    case 0x1605:
+                        System.out.println("## 0x1605 - 3.1.4 上传调试数据");
+                        break;
+                    case 0x1606:
+                        System.out.println("## 0x1606 - 3.1.5 位置数据");
+                        break;
+                    case 0x1607:
+                        System.out.println("## 0x1607 - 3.1.6 冻结帧数据");
+                        break;
+                    case 0x1608:
+                        System.out.println("## 0x1608 - 3.1.7 怠速车况数据");
+                        break;
+                    case 0x160A:
+                        System.out.println("## 0x160A - 3.1.9 行为位置数据");
+                        break;
+                    case 0x1621:
+                        System.out.println("## 0x1621 - 3.2.2 取得车辆当前检测数据");
+                        break;
+                    case 0x1622:
+                        System.out.println("## 0x1622 - 3.2.3 根据索引 ID 取得相应的检测数据");
+                        break;
+                    case 0x1623:
+                        System.out.println("## 0x1623 - 3.2.4 车辆诊断参数设定");
+                        break;
+                    case 0x1624:
+                        System.out.println("## 0x1624 - 3.2.5 清空累计平均油耗");
+                        break;
+                    case 0x1625:
+                        System.out.println("## 0x1625 - 3.2.6 取得系统版本信息");
+                        break;
+                    case 0x1626:
+                        System.out.println("## 0x1626 - 3.2.7 清除车辆故障码");
+                        break;
+                    case 0x16E0:
+                        System.out.println("## 0x16E0 - 3.3.1 恢复出厂设置");
+                        break;
+                }
+
+            } finally {
+                // 释放ByteBuf
+                if(null != buffer) {
+                    buffer.release();
+                }
+            }
+        }
+        return dataPackTargetList;
     }
 }

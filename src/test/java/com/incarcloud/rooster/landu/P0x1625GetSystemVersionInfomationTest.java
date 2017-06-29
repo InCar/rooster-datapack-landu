@@ -1,6 +1,6 @@
 package com.incarcloud.rooster.landu;
 
-import com.incarcloud.rooster.datapack.util.DataPackUtil;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
@@ -57,37 +57,37 @@ public class P0x1625GetSystemVersionInfomationTest {
             buffer.skipBytes(2);
 
             // 3.OBD 串号（设备号）
-            String obdCode = DataPackUtil.readString(buffer);
+            String obdCode = LanduDataPackUtil.readString(buffer);
             System.out.printf("obdCode: %s\n", obdCode);
 
             // 4.TripID
-            int tripId = DataPackUtil.readDWord(buffer);
+            long tripId = LanduDataPackUtil.readDWord(buffer);
             System.out.printf("tripId: %d\n", tripId);
 
             // 5.VID
-            String vid = DataPackUtil.readString(buffer);
+            String vid = LanduDataPackUtil.readString(buffer);
             System.out.printf("vid: %s\n", vid);
 
             // 6.VIN码
-            String vin = DataPackUtil.readString(buffer);
+            String vin = LanduDataPackUtil.readString(buffer);
             System.out.printf("vin: %s\n", vin);
 
             // 格式：【硬件版本号】+【固件版本号】+【软件版本号】+【软件类别 ID】
             // 7.硬件版本号
-            String hardwareVersionNumber = DataPackUtil.readString(buffer);
+            String hardwareVersionNumber = LanduDataPackUtil.readString(buffer);
             System.out.printf("hardwareVersionNumber: %s\n", hardwareVersionNumber);
 
             // 8.固件版本号
-            String firmwareVersionNumber = DataPackUtil.readString(buffer);
+            String firmwareVersionNumber = LanduDataPackUtil.readString(buffer);
             System.out.printf("firmwareVersionNumber: %s\n", firmwareVersionNumber);
 
             // 9.软件版本号
-            String softwareVersionNumber = DataPackUtil.readString(buffer);
+            String softwareVersionNumber = LanduDataPackUtil.readString(buffer);
             System.out.printf("softwareVersionNumber: %s\n", softwareVersionNumber);
 
             // 10.软件类别 ID
             // 注：【软件类别 ID】未说明
-            //int softwareTypeId = DataPackUtil.readByte(buffer);
+            //int softwareTypeId = LanduDataPackUtil.readByte(buffer);
             //System.out.printf("softwareTypeId: %s\n", softwareTypeId);
         }
         System.out.println("-------------------------end");

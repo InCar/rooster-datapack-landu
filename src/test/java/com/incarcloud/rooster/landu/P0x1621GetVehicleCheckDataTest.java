@@ -1,6 +1,6 @@
 package com.incarcloud.rooster.landu;
 
-import com.incarcloud.rooster.datapack.util.DataPackUtil;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
@@ -57,25 +57,25 @@ public class P0x1621GetVehicleCheckDataTest {
             buffer.skipBytes(2);
 
             // 3.OBD 串号（设备号）
-            String obdCode = DataPackUtil.readString(buffer);
+            String obdCode = LanduDataPackUtil.readString(buffer);
             System.out.printf("obdCode: %s\n", obdCode);
 
             // 4.TripID
-            int tripId = DataPackUtil.readDWord(buffer);
+            long tripId = LanduDataPackUtil.readDWord(buffer);
             System.out.printf("tripId: %d\n", tripId);
 
             // 5.VID
-            String vid = DataPackUtil.readString(buffer);
+            String vid = LanduDataPackUtil.readString(buffer);
             System.out.printf("vid: %s\n", vid);
 
             // 6.VIN码
-            String vin = DataPackUtil.readString(buffer);
+            String vin = LanduDataPackUtil.readString(buffer);
             System.out.printf("vin: %s\n", vin);
 
             // 7.故障分级内容
             // 格式：【故障分级内容】::= 【严重等级】+【个数】+【故障码】
             // 7.1 严重等级
-            int faultLevel = DataPackUtil.readByte(buffer);
+            int faultLevel = LanduDataPackUtil.readByte(buffer);
             System.out.printf("faultLevel: %s\n", faultLevel);
             switch (faultLevel) {
                 case 0x00:
@@ -101,7 +101,7 @@ public class P0x1621GetVehicleCheckDataTest {
             }
 
             // 7.2 个数
-            int faultCodeTotal = DataPackUtil.readByte(buffer);
+            int faultCodeTotal = LanduDataPackUtil.readByte(buffer);
             System.out.printf("faultCodeTotal: %s\n", faultCodeTotal);
 
             // 7.3 故障码
@@ -109,9 +109,9 @@ public class P0x1621GetVehicleCheckDataTest {
             // 注：未找到测试数据，按照文档格式解析数据
             String faultCode, faultAttr, faultDesc;
             for (int i = 0; i < faultCodeTotal; i++) {
-                faultCode = DataPackUtil.readString(buffer);
-                faultAttr = DataPackUtil.readString(buffer);
-                faultDesc = DataPackUtil.readString(buffer);
+                faultCode = LanduDataPackUtil.readString(buffer);
+                faultAttr = LanduDataPackUtil.readString(buffer);
+                faultDesc = LanduDataPackUtil.readString(buffer);
                 System.out.printf("%d-(faultCode: %s, faultAttr: %s, faultDesc: %s)\n", (i+1), faultCode, faultAttr, faultDesc);
             }
         }

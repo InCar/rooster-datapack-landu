@@ -5,12 +5,11 @@ import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * LANDU Parser.
@@ -234,7 +233,6 @@ public class DataParserLandu implements IDataParser {
             ByteBuf buffer = null;
             dataPackTargetList = new ArrayList<>();
             DataTarget dataTarget = new DataTarget("landu");
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
 
             try {
                 // 初始化ByteBuf
@@ -274,7 +272,7 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataTarget.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
-                        dataTarget.setReceiveDate(dateFormat.parse(LanduDataPackUtil.readString(buffer)));
+                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
 
                         break;
                     case 0x1602:
@@ -321,7 +319,9 @@ public class DataParserLandu implements IDataParser {
                         break;
                 }
 
-            } catch (Exception e) {
+            } catch (ParseException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             } finally {
                 // 释放ByteBuf

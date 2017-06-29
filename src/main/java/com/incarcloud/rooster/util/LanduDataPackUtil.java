@@ -3,6 +3,13 @@ package com.incarcloud.rooster.util;
 import com.incarcloud.rooster.datapack.DataPackUtil;
 import io.netty.buffer.ByteBuf;
 
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 /**
  * lANDU DataPack工具类
  *
@@ -64,6 +71,26 @@ public class LanduDataPackUtil extends DataPackUtil {
      */
     public static long readDWord(ByteBuf buffer) {
         return readUInt4(buffer);
+    }
+
+    /**
+     * 格式化时间
+     */
+    public final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+
+    /**
+     * 读取一个时间类型数据<br>
+     *     时间字符串格式必须是
+     *
+     * @param buffer
+     * @return
+     */
+    public static Date readDate(ByteBuf buffer) throws UnsupportedEncodingException, ParseException {
+        String dataString = readString(buffer);
+        if(null != dataString && !"".equals(dataString.trim())) {
+            return dateFormat.parse(dataString);
+        }
+        return  null;
     }
 
     protected LanduDataPackUtil() {

@@ -1,12 +1,16 @@
 package com.incarcloud.rooster.datapack;
 
+import com.incarcloud.rooster.datatarget.DataTarget;
 import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * LANDU Parser.
@@ -227,8 +231,11 @@ public class DataParserLandu implements IDataParser {
         List<DataPackTarget> dataPackTargetList = null;
         byte[] dataPackBytes = Base64.getDecoder().decode(dataPack.getDataB64());
         if(validate(dataPackBytes)) {
-            // ByteBuf
             ByteBuf buffer = null;
+            dataPackTargetList = new ArrayList<>();
+            DataTarget dataTarget = new DataTarget("landu");
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+
             try {
                 // 初始化ByteBuf
                 buffer = Unpooled.wrappedBuffer(dataPackBytes);
@@ -255,10 +262,20 @@ public class DataParserLandu implements IDataParser {
                 System.out.printf("version: %s\n", version);
 
                 // 命令字
-                dataPackTargetList = new ArrayList<>();
                 switch (LanduDataPackUtil.readUInt2(buffer)) {
                     case 0x1601:
                         System.out.println("## 0x1601 - 3.1.1 车辆检测数据主动上传");
+                        // 1.设备号
+                        dataTarget.setObdCode(LanduDataPackUtil.readString(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
+                        // 3.VID
+                        dataTarget.setVid(LanduDataPackUtil.readString(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(LanduDataPackUtil.readString(buffer));
+                        // 5.检测数据时间
+                        dataTarget.setReceiveDate(dateFormat.parse(LanduDataPackUtil.readString(buffer)));
+
                         break;
                     case 0x1602:
                         System.out.println("## 0x1602 - 3.1.2 上传车辆报警");
@@ -304,6 +321,8 @@ public class DataParserLandu implements IDataParser {
                         break;
                 }
 
+            } catch (Exception e) {
+                e.printStackTrace();
             } finally {
                 // 释放ByteBuf
                 if(null != buffer) {

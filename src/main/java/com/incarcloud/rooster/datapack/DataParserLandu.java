@@ -212,4 +212,10 @@ public class DataParserLandu implements IDataParser {
             responseBuf.release();
         }
     }
+
+
+    @Override
+    public List<DataPackTarget> extractBody(DataPack dataPack) {
+        throw new UnsupportedOperationException();
+    }
 }

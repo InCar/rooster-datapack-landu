@@ -101,7 +101,7 @@ public class DataParserLanduTest {
     public void testExtract() throws Exception {
         IDataParser parser = new DataParserLandu();
         List<DataPack> dataPackList = parser.extract(buffer);
-        Assert.assertEquals(3, dataPackList.size());
+        Assert.assertEquals(7, dataPackList.size());
 
         for(DataPack dataPack: dataPackList) {
             dataPack.freeBuf();
@@ -112,7 +112,7 @@ public class DataParserLanduTest {
     public void testCreateResponse() {
         IDataParser parser = new DataParserLandu();
         ByteBuf responseBuf = parser.createResponse(parser.extract(buffer).get(0), ERespReason.OK);
-        Assert.assertEquals("AA55000BFFF41C05160600023B", DatatypeConverter.printHexBinary(ByteBufUtil.getBytes(responseBuf, 0, responseBuf.readableBytes())));
+        Assert.assertEquals("AA55000BFFF40005160100021A", DatatypeConverter.printHexBinary(ByteBufUtil.getBytes(responseBuf, 0, responseBuf.readableBytes())));
     }
 
     @Test

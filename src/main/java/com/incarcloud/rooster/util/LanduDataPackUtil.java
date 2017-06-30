@@ -128,6 +128,32 @@ public class LanduDataPackUtil extends DataPackUtil {
         return positionString.split(",");
     }
 
+    /**
+     * 将E|W/S|N表示方式转换为数值类型<br>
+     *     转换规则：E->+,W->-,N->+,S->-<br>
+     * 例如：E116.362946->116.362946<br>
+     *      N40.079099->40.079099<br>
+     *      W116.362946->-116.362946<br>
+     *      S40.079099->-40.079099
+     *
+     * @param positionString E|W/S|N表示方式字符串
+     * @return double
+     */
+    public static double parsePositionString(String positionString) {
+        String value = positionString.substring(1);
+        switch (positionString.charAt(0)) {
+            case 'E':
+            case 'N':
+                // 东经北纬为正数
+                return Double.parseDouble(value);
+            case 'W':
+            case 'S':
+                // 西经南纬为负数
+                return 0.0 - Double.parseDouble(value);
+        }
+        return 0;
+    }
+
     protected LanduDataPackUtil() {
         super();
     }

@@ -1,6 +1,8 @@
 package com.incarcloud.rooster.datapack;
 
 import com.incarcloud.rooster.datatarget.DataTarget;
+import com.incarcloud.rooster.datatarget.DataTargetOverview;
+import com.incarcloud.rooster.datatarget.DataTargetPosition;
 import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -9,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -234,6 +235,8 @@ public class DataParserLandu implements IDataParser {
             ByteBuf buffer = null;
             dataPackTargetList = new ArrayList<>();
             DataTarget dataTarget = new DataTarget("landu");
+            DataTargetOverview dataTargetOverview;
+            DataTargetPosition dataTargetPosition;
 
             try {
                 // 初始化ByteBuf
@@ -243,8 +246,7 @@ public class DataParserLandu implements IDataParser {
                 LanduDataPackUtil.readBytes(buffer, 6);
 
                 // 数据包ID
-                int packId = LanduDataPackUtil.readByte(buffer);
-                System.out.printf("packId: %d\n", packId);
+                dataTarget.setPackId(LanduDataPackUtil.readByte(buffer));
 
                 // 协议格式版本
                 String version;
@@ -258,7 +260,7 @@ public class DataParserLandu implements IDataParser {
                     default:
                         version = "unknown";
                 }
-                System.out.printf("version: %s\n", version);
+                dataTarget.setProtocolVersion(version);
 
                 // 命令字
                 switch (LanduDataPackUtil.readUInt2(buffer)) {
@@ -280,27 +282,33 @@ public class DataParserLandu implements IDataParser {
                             case 0x01:
                                 // 0x01-发动机点火时
                                 System.out.println("## 发动机点火时");
-                                // 6.1 启动电压
-                                String firingVoltage = LanduDataPackUtil.readString(buffer);
-                                System.out.printf("firingVoltageValue: %s V\n", firingVoltage);
-                                // 6.1 车速
-                                String speed = LanduDataPackUtil.readString(buffer);
-                                System.out.printf("speed: %s km/h\n", speed);
-                                // 6.2 当前行程行驶距离
-                                String travelDistance = LanduDataPackUtil.readString(buffer);
-                                System.out.printf("travelDistance: %s m\n", travelDistance);
-                                // 6.3 定位信息
+                                // 6.1 整车数据
+                                dataTargetOverview = new DataTargetOverview(dataTarget);
+                                // 6.1.1 车辆状态
+                                dataTargetOverview.setStatus(0x01);
+                                // 6.1.2 启动电压(V)
+                                dataTargetOverview.setVoltage(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                                // 6.1.3 车速(km/h)
+                                dataTargetOverview.setSpeed(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                                // 6.1.4 当前行程行驶距离(m)
+                                dataTargetOverview.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
+                                // --add
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.OVERVIEW, dataTargetOverview));
+                                // 6.2 定位信息
+                                dataTargetPosition = new DataTargetPosition(dataTarget);
                                 String[] positions = LanduDataPackUtil.splitPositionString(buffer);
-                                String longitude = positions[0];
-                                System.out.println("longitude: " + longitude);
-                                String latitude = positions[1];
-                                System.out.println("latitude: " + latitude);
-                                float direction = Float.parseFloat(positions[2]);
-                                System.out.println("direction: " + direction);
-                                Date positionDate = LanduDataPackUtil.formatDateString(positions[3]);
-                                System.out.println(positionDate);
-                                int positionMode = Integer.parseInt(positions[4]);
-                                System.out.println("positionMode: " + positionMode);
+                                // 6.2.1.经度
+                                dataTargetPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
+                                // 6.2.2 纬度
+                                dataTargetPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
+                                // 6.2.2 方向
+                                dataTargetPosition.setDirection(positions[2]);
+                                // 6.2.3 定位时间
+                                dataTargetPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
+                                // 6.2.4 定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                                dataTargetPosition.setPositioMode(Integer.parseInt(positions[4]));
+                                // --add
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.POSITION, dataTargetPosition));
                                 break;
                             case 0x02:
                                 // 0x02-发动机运行中
@@ -319,7 +327,6 @@ public class DataParserLandu implements IDataParser {
                                 System.out.println("## 车辆不能检测");
                                 break;
                         }
-
                         break;
                     case 0x1602:
                         System.out.println("## 0x1602 - 3.1.2 上传车辆报警");
@@ -376,6 +383,7 @@ public class DataParserLandu implements IDataParser {
                 }
             }
         }
+
         return dataPackTargetList;
     }
 }

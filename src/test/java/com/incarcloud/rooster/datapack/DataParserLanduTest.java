@@ -120,6 +120,7 @@ public class DataParserLanduTest {
         IDataParser parser = new DataParserLandu();
         List<DataPack> dataPackList = parser.extract(buffer);
         System.out.println(dataPackList.size());
-        parser.extractBody(dataPackList.get(0));
+        List<DataPackTarget> dataPackTargetList = parser.extractBody(dataPackList.get(0));
+        Assert.assertNotEquals(0, dataPackTargetList);
     }
 }

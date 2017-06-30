@@ -52,4 +52,12 @@ public class LanduDataPackUtilTest {
     public void testReadDWord() {
         Assert.assertEquals(4265689667L, LanduDataPackUtil.readDWord(buffer));
     }
+
+    @Test
+    public void testParsePositionString() {
+        Assert.assertEquals(116.362946, LanduDataPackUtil.parsePositionString("E116.362946"), 0);
+        Assert.assertEquals(40.079099, LanduDataPackUtil.parsePositionString("N40.079099"), 0);
+        Assert.assertEquals(-116.362946, LanduDataPackUtil.parsePositionString("W116.362946"), 0);
+        Assert.assertEquals(-40.079099, LanduDataPackUtil.parsePositionString("S40.079099"), 0);
+    }
 }

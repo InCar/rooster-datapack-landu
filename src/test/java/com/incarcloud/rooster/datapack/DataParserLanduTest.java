@@ -119,7 +119,6 @@ public class DataParserLanduTest {
     public void testExtractBody() {
         IDataParser parser = new DataParserLandu();
         List<DataPack> dataPackList = parser.extract(buffer);
-        System.out.println(dataPackList.size());
         List<DataPackTarget> dataPackTargetList = parser.extractBody(dataPackList.get(0));
         Assert.assertNotEquals(0, dataPackTargetList);
     }

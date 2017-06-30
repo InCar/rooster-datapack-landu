@@ -1,6 +1,5 @@
 package com.incarcloud.rooster.util;
 
-import com.incarcloud.rooster.datapack.DataPackUtil;
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
@@ -11,7 +10,7 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * lANDU DataPack工具类
+ * LANDU DataPack工具类
  *
  * @author Aaric, created on 2017-06-29T13:34.
  * @since 1.0-SNAPSHOT

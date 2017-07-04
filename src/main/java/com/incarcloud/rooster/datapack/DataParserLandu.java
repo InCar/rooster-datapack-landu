@@ -1,8 +1,7 @@
 package com.incarcloud.rooster.datapack;
 
-import com.incarcloud.rooster.datatarget.DataTarget;
-import com.incarcloud.rooster.datatarget.DataTargetOverview;
-import com.incarcloud.rooster.datatarget.DataTargetPosition;
+import com.incarcloud.rooster.datatarget.*;
+import com.incarcloud.rooster.util.DataTool;
 import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -313,14 +312,113 @@ public class DataParserLandu implements IDataParser {
                             case 0x02:
                                 // 0x02-发动机运行中
                                 System.out.println("## 发动机运行中");
+                                int count = buffer.readUnsignedShort();
+                                if(count > 0){
+                                    List<DataTargetPeak> dataTargetPeakList = new ArrayList<DataTargetPeak>();
+                                    for(int i = 0; i < count; i++){
+                                        DataTargetPeak dataTargetPeak = new DataTargetPeak();
+                                        //数据项id
+                                        Integer id = buffer.readUnsignedShort();
+                                        //数据项内容
+                                        String content = DataTool.readStringZero(buffer);
+
+                                        dataTargetPeak.setPeakName(Integer.toHexString(id));
+                                        dataTargetPeak.setPeakValue(content);
+
+                                        dataTargetPeakList.add(dataTargetPeak);
+                                    }
+                                    DataTargetSet dataTargetSet = new DataTargetSet();
+                                    dataTargetSet.setDataTargetPeakList(dataTargetPeakList);
+
+                                    dataPackTargetList.add(new DataPackTarget(ETargetType.PEAKLIST, dataTargetSet));
+                                }
                                 break;
                             case 0x03:
                                 // 0x03-发动机熄火时
                                 System.out.println("## 发动机熄火时");
+                                dataTargetOverview = new DataTargetOverview(dataTarget);
+                                dataTargetOverview.setStatus(0x03);
+                                //本行程数据小计
+                                //本次发动机运行时间
+                                dataTargetOverview.setEngineRunningTime(buffer.readUnsignedShort());
+                                //本次行驶距离
+                                dataTargetOverview.setTravelDistance(buffer.readInt());
+                                Integer averageFuelConsumption = buffer.readUnsignedShort();
+                                //本次平均油耗
+                                dataTargetOverview.setAverageFuelConsumption(averageFuelConsumption.floatValue()/100f);
+                                //累计行驶里程
+                                dataTargetOverview.setTotalTravelDistance(buffer.readInt());
+                                Integer totalAverageFuelConsumption = buffer.readUnsignedShort();
+                                //累计平均油耗
+                                dataTargetOverview.setTotalAverageFuelConsumption(totalAverageFuelConsumption.floatValue()/100f);
+                                //车速分组统计
+                                count = buffer.readUnsignedByte();
+                                Integer[] speeds = new Integer[count];
+                                Integer[] times = new Integer[count];
+                                Integer[] gaps = new Integer[count];
+                                for(int i = 0;i < count;i++){
+                                    speeds[i] = (int) buffer.readUnsignedByte();
+                                    times[i]= buffer.readUnsignedShort();
+                                    gaps[i] = buffer.readInt();
+                                }
+                                //设置速度值
+                                dataTargetOverview.setSpeedSet(speeds);
+                                //时间小计
+                                dataTargetOverview.setSubTotalTime(times);
+                                //距离小计
+                                dataTargetOverview.setSubTotalDistance(gaps);
+                                //驾驶习惯统计
+                                //本次急加速次数
+                                dataTargetOverview.setSuddenUp(buffer.readUnsignedShort());
+                                //本次急减速次数
+                                dataTargetOverview.setSuddenDec(buffer.readUnsignedShort());
+                                //本次急转向次数
+                                dataTargetOverview.setSuddenTurn(buffer.readUnsignedShort());
+                                //本次时速超速时间
+                                dataTargetOverview.setSpeedingTime(buffer.readInt());
+                                //最高车速
+                                dataTargetOverview.setMaxSpeed((int) buffer.readUnsignedByte());
+                                //车速
+                                dataTargetOverview.setSpeed(Float.parseFloat(DataTool.readStringZero(buffer)));
+                                //当前行程行驶距离
+                                dataTargetOverview.setTravelDistance(Integer.parseInt(DataTool.readStringZero(buffer)));
+                                // --add
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.OVERVIEW, dataTargetOverview));
+                                //定位信息
+                                dataTargetPosition = new DataTargetPosition(dataTarget);
+                                positions = DataTool.readStringZero(buffer).split(",");
+                                // 6.2.1.经度
+                                String lngStr = positions[0];
+                                Double lng = 0d;
+                                if(lngStr != null && !"-".equals(lngStr)){
+                                    lng = Double.parseDouble(lngStr);
+                                }
+                                dataTargetPosition.setLongitude(lng);
+                                // 6.2.2 纬度
+                                String latStr = positions[1];
+                                Double lat = 0d;
+                                if(latStr != null && !"-".equals(latStr)){
+                                    lat = Double.parseDouble(latStr);
+                                }
+                                dataTargetPosition.setLatitude(lat);
+                                // 6.2.2 方向
+                                dataTargetPosition.setDirection(positions[2]);
+                                // 6.2.3 定位时间
+                                dataTargetPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
+                                // 6.2.4 定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                                dataTargetPosition.setPositioMode(Integer.parseInt(positions[4]));
+                                // --add
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.POSITION, dataTargetPosition));
                                 break;
                             case 0x04:
                                 // 0x04-发动机熄火后
                                 System.out.println("## 发动机熄火后");
+                                dataTargetOverview = new DataTargetOverview(dataTarget);
+                                dataTargetOverview.setStatus(0x04);
+                                //蓄电池电压值
+                                dataTargetOverview.setVoltage(Float.parseFloat(DataTool.readStringZero(buffer)));
+                                // --add
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.OVERVIEW, dataTargetOverview));
                                 break;
                             case 0x05:
                                 // 0x05-车辆不能检测

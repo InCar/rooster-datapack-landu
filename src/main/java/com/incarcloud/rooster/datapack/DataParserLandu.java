@@ -2,9 +2,12 @@ package com.incarcloud.rooster.datapack;
 
 import com.incarcloud.rooster.datatarget.*;
 import com.incarcloud.rooster.util.DataTool;
+import com.incarcloud.rooster.util.DateUtil;
 import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
@@ -19,6 +22,7 @@ import java.util.List;
  * @since 2.0
  */
 public class DataParserLandu implements IDataParser {
+    private static Logger _logger = LoggerFactory.getLogger(DataParserLandu.class);
 
     static {
         /**
@@ -261,14 +265,15 @@ public class DataParserLandu implements IDataParser {
                 }
                 dataTarget.setProtocolVersion(version);
 
+                int commandId = LanduDataPackUtil.readUInt2(buffer);
                 // 命令字
-                switch (LanduDataPackUtil.readUInt2(buffer)) {
+                switch (commandId) {
                     case 0x1601:
                         System.out.println("## 0x1601 - 3.1.1 车辆检测数据主动上传");
                         // 1.设备号
                         dataTarget.setObdCode(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
+                        dataTarget.setTripId(buffer.readUnsignedShort());
                         // 3.VID
                         dataTarget.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
@@ -313,25 +318,23 @@ public class DataParserLandu implements IDataParser {
                                 // 0x02-发动机运行中
                                 System.out.println("## 发动机运行中");
                                 int count = buffer.readUnsignedShort();
-                                if(count > 0){
-                                    List<DataTargetPeak> dataTargetPeakList = new ArrayList<DataTargetPeak>();
-                                    for(int i = 0; i < count; i++){
-                                        DataTargetPeak dataTargetPeak = new DataTargetPeak();
-                                        //数据项id
-                                        Integer id = buffer.readUnsignedShort();
-                                        //数据项内容
-                                        String content = DataTool.readStringZero(buffer);
+                                List<DataTargetPeak> dataTargetPeakList = new ArrayList<DataTargetPeak>();
+                                for(int i = 0; i < count; i++){
+                                    DataTargetPeak dataTargetPeak = new DataTargetPeak();
+                                    //数据项id
+                                    Integer id = buffer.readUnsignedShort();
+                                    //数据项内容
+                                    String content = DataTool.readStringZero(buffer);
 
-                                        dataTargetPeak.setPeakName(Integer.toHexString(id));
-                                        dataTargetPeak.setPeakValue(content);
+                                    dataTargetPeak.setPeakName(Integer.toHexString(id));
+                                    dataTargetPeak.setPeakValue(content);
 
-                                        dataTargetPeakList.add(dataTargetPeak);
-                                    }
-                                    DataTargetSet dataTargetSet = new DataTargetSet();
-                                    dataTargetSet.setDataTargetPeakList(dataTargetPeakList);
-
-                                    dataPackTargetList.add(new DataPackTarget(ETargetType.PEAKLIST, dataTargetSet));
+                                    dataTargetPeakList.add(dataTargetPeak);
                                 }
+                                DataTargetSet dataTargetSet = new DataTargetSet(dataTarget);
+                                dataTargetSet.setDataTargetList(dataTargetPeakList);
+                                //添加分发数据
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.PEAKLIST, dataTargetSet));
                                 break;
                             case 0x03:
                                 // 0x03-发动机熄火时
@@ -387,7 +390,7 @@ public class DataParserLandu implements IDataParser {
                                 //定位信息
                                 dataTargetPosition = new DataTargetPosition(dataTarget);
                                 positions = DataTool.readStringZero(buffer).split(",");
-                                // 6.2.1.经度
+                                //经度
                                 String lngStr = positions[0];
                                 Double lng = 0d;
                                 if(lngStr != null && !"-".equals(lngStr)){
@@ -401,11 +404,11 @@ public class DataParserLandu implements IDataParser {
                                     lat = Double.parseDouble(latStr);
                                 }
                                 dataTargetPosition.setLatitude(lat);
-                                // 6.2.2 方向
+                                //方向
                                 dataTargetPosition.setDirection(positions[2]);
-                                // 6.2.3 定位时间
+                                //定位时间
                                 dataTargetPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
-                                // 6.2.4 定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                                //定位方式：0-无效数据，1-基站定位，2-GPS 定位
                                 dataTargetPosition.setPositioMode(Integer.parseInt(positions[4]));
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(ETargetType.POSITION, dataTargetPosition));
@@ -428,45 +431,442 @@ public class DataParserLandu implements IDataParser {
                         break;
                     case 0x1602:
                         System.out.println("## 0x1602 - 3.1.2 上传车辆报警");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+                        // 5.检测数据时间
+                        String dateStr = DataTool.readStringZero(buffer);
+                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+                        //报警类型
+                        int alarmType = buffer.readUnsignedByte();
+                        switch (alarmType){
+                            case 0x01:
+                                System.out.println("## 新故障码报警: ");
+                                //故障码个数
+                                int count = buffer.readUnsignedByte();
+                                List<DataTargetAlarm> dataTargetList = new ArrayList<DataTargetAlarm>();
+                                for(int i = 0;i < count;i ++){
+                                    //故障码
+                                    String code = DataTool.readStringZero(buffer);
+                                    //故障码属性
+                                    String value = DataTool.readStringZero(buffer);
+
+                                    DataTargetAlarm dataTargetAlarm = new DataTargetAlarm();
+                                    dataTargetAlarm.setAlarmName("故障码");
+                                    dataTargetAlarm.setAlarmCode(code);
+                                    dataTargetAlarm.setAlarmValue(value);
+
+                                    dataTargetList.add(dataTargetAlarm);
+                                }
+
+                                DataTargetSet dataTargetSet = new DataTargetSet(dataTarget);
+                                dataTargetSet.setDataTargetList(dataTargetList);
+                                //添加分发数据
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.ALARMLIST, dataTargetSet));
+                                break;
+                            case 0x02:
+                                System.out.println("## 碰撞报警/异常震动报警: ");
+                                break;
+                            case 0x03:
+                                System.out.println("## 水温报警: ");
+                                //实际水温数值
+                                String waterTemperature = DataTool.readStringZero(buffer);
+                                DataTargetAlarm dataTargetAlarm = new DataTargetAlarm(dataTarget);
+                                dataTargetAlarm.setAlarmName("水温报警");
+                                dataTargetAlarm.setAlarmDesc(waterTemperature);
+                                //添加分发数据
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.ALARM, dataTargetAlarm));
+                                break;
+                            case 0x04:
+                                System.out.println("## 充电电压报警: ");
+                                //充电电压值
+                                String chargingVoltage = DataTool.readStringZero(buffer);
+                                dataTargetAlarm = new DataTargetAlarm(dataTarget);
+                                dataTargetAlarm.setAlarmName("充电电压报警");
+                                dataTargetAlarm.setAlarmDesc(chargingVoltage);
+                                //添加分发数据
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.ALARM, dataTargetAlarm));
+                                break;
+                            case 0x05:
+                                System.out.println("## 拔下OBD报警: ");
+                                //设备拔下时间戳
+                                String pullOutTime = DataTool.readStringZero(buffer);
+                                dataTargetAlarm = new DataTargetAlarm(dataTarget);
+                                dataTargetAlarm.setAlarmName("拔下OBD报警");
+                                dataTargetAlarm.setAlarmDesc(pullOutTime);
+                                //添加分发数据
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.ALARM, dataTargetAlarm));
+                                break;
+                        }
+
                         break;
                     case 0x1603:
                         System.out.println("## 0x1603 - 3.1.3 从服务器取得参数");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+
+                        DataTargetDevice dataTargetDevice = new DataTargetDevice(dataTarget);
+                        //硬件版本号
+                        dataTargetDevice.setHardwareVersion(DataTool.readStringZero(buffer));
+                        //固件版本号
+                        dataTargetDevice.setFirmwareVersion(DataTool.readStringZero(buffer));
+                        //软件版本号
+                        dataTargetDevice.setSoftwareVersion(DataTool.readStringZero(buffer));
+                        //诊断程序类型
+                        dataTargetDevice.setDiagnoseProgramType((int) buffer.readUnsignedByte());
+                        //恢复出厂设置序号
+                        dataTargetDevice.setInitCode((int) buffer.readUnsignedByte());
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.DEVICE, dataTargetDevice));
                         break;
                     case 0x1605:
                         System.out.println("## 0x1605 - 3.1.4 上传调试数据");
                         break;
                     case 0x1606:
                         System.out.println("## 0x1606 - 3.1.5 位置数据");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+
+                        //定位信息个数
+                        int count = buffer.readUnsignedByte();
+                        List<DataTargetPosition> dataTargetPositionList = new ArrayList<DataTargetPosition>();
+                        //定位信息列表
+                        for(int i = 0;i < count;i ++){
+                            //定位信息
+                            dataTargetPosition = new DataTargetPosition();
+                            String[] positions = DataTool.readStringZero(buffer).split(",");
+                            //经度
+                            String lngStr = positions[0];
+                            Double lng = 0d;
+                            if(lngStr != null && !"-".equals(lngStr)){
+                                lng = Double.parseDouble(lngStr);
+                            }
+                            dataTargetPosition.setLongitude(lng);
+                            //纬度
+                            String latStr = positions[1];
+                            Double lat = 0d;
+                            if(latStr != null && !"-".equals(latStr)){
+                                lat = Double.parseDouble(latStr);
+                            }
+                            dataTargetPosition.setLatitude(lat);
+                            //方向
+                            dataTargetPosition.setDirection(positions[2]);
+                            //定位时间
+                            dataTargetPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
+                            //定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                            dataTargetPosition.setPositioMode(Integer.parseInt(positions[4]));
+
+                            dataTargetPositionList.add(dataTargetPosition);
+                        }
+                        DataTargetSet dataTargetSet = new DataTargetSet(dataTarget);
+                        dataTargetSet.setDataTargetList(dataTargetPositionList);
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.POSITIONLIST, dataTargetSet));
                         break;
                     case 0x1607:
                         System.out.println("## 0x1607 - 3.1.6 冻结帧数据");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+                        // 5.检测数据时间
+                        dateStr = DataTool.readStringZero(buffer);
+                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+
+                        //冻结帧个数
+                        count = buffer.readUnsignedShort();
+                        List<DataTargetPeak> dataTargetPeakList = new ArrayList<DataTargetPeak>();
+                        //冻结帧列表
+                        for(int i = 0; i < count; i++){
+                            DataTargetPeak dataTargetPeak = new DataTargetPeak();
+                            //数据项id
+                            Integer id = buffer.readUnsignedShort();
+                            //数据项内容
+                            String content = DataTool.readStringZero(buffer);
+
+                            dataTargetPeak.setPeakName(Integer.toHexString(id));
+                            dataTargetPeak.setPeakValue(content);
+
+                            dataTargetPeakList.add(dataTargetPeak);
+                        }
+                        dataTargetSet = new DataTargetSet(dataTarget);
+                        dataTargetSet.setDataTargetList(dataTargetPeakList);
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.PEAKLIST, dataTargetSet));
                         break;
                     case 0x1608:
                         System.out.println("## 0x1608 - 3.1.7 怠速车况数据");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+                        // 5.检测数据时间
+                        dateStr = DataTool.readStringZero(buffer);
+                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+
+                        //故障码个数
+                        int alarmCount = buffer.readUnsignedByte();
+                        List<DataTargetAlarm> dataTargetList = new ArrayList<DataTargetAlarm>();
+                        //故障码列表
+                        for(int i = 0;i < alarmCount;i ++){
+                            //故障码
+                            String code = DataTool.readStringZero(buffer);
+                            //故障码属性
+                            String value = DataTool.readStringZero(buffer);
+                            //故障码描述
+                            String desc = DataTool.readStringZero(buffer);
+
+                            DataTargetAlarm dataTargetAlarm = new DataTargetAlarm();
+                            dataTargetAlarm.setAlarmName("故障码");
+                            dataTargetAlarm.setAlarmCode(code);
+                            dataTargetAlarm.setAlarmValue(value);
+                            dataTargetAlarm.setAlarmDesc(desc);
+
+                            dataTargetList.add(dataTargetAlarm);
+                        }
+
+                        dataTargetSet = new DataTargetSet(dataTarget);
+                        dataTargetSet.setDataTargetList(dataTargetList);
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.ALARMLIST, dataTargetSet));
+
+                        //数据流个数
+                        count = buffer.readUnsignedShort();
+                        dataTargetPeakList = new ArrayList<DataTargetPeak>();
+                        //数据流列表(车况信息)
+                        for(int i = 0; i < count; i++){
+                            DataTargetPeak dataTargetPeak = new DataTargetPeak();
+                            //数据项id
+                            Integer id = buffer.readUnsignedShort();
+                            //数据项内容
+                            String content = DataTool.readStringZero(buffer);
+
+                            dataTargetPeak.setPeakName(Integer.toHexString(id));
+                            dataTargetPeak.setPeakValue(content);
+
+                            dataTargetPeakList.add(dataTargetPeak);
+                        }
+                        dataTargetSet = new DataTargetSet(dataTarget);
+                        dataTargetSet.setDataTargetList(dataTargetPeakList);
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.PEAKLIST, dataTargetSet));
                         break;
                     case 0x160A:
                         System.out.println("## 0x160A - 3.1.9 行为位置数据");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+                        // 5.检测数据时间
+                        dateStr = DataTool.readStringZero(buffer);
+                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+                        //数据类型
+                        int dataType = buffer.readUnsignedByte();
+                        switch (dataType){
+                            case 0x01:
+                                System.out.println("## 超速记录");
+                            case 0x02:
+                                System.out.println("## 急加速记录");
+                            case 0x03:
+                                System.out.println("## 急减速记录");
+                            case 0x04:
+                                System.out.println("## 急转弯记录");
+                                //定位信息
+                                dataTargetPosition = new DataTargetPosition(dataTarget);
+                                String[] positions = DataTool.readStringZero(buffer).split(",");
+                                //经度
+                                String lngStr = positions[0];
+                                Double lng = 0d;
+                                if(lngStr != null && !"-".equals(lngStr)){
+                                    lng = Double.parseDouble(lngStr);
+                                }
+                                dataTargetPosition.setLongitude(lng);
+                                //纬度
+                                String latStr = positions[1];
+                                Double lat = 0d;
+                                if(latStr != null && !"-".equals(latStr)){
+                                    lat = Double.parseDouble(latStr);
+                                }
+                                dataTargetPosition.setLatitude(lat);
+                                //方向
+                                dataTargetPosition.setDirection(positions[2]);
+                                //定位时间
+                                dataTargetPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
+                                //定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                                dataTargetPosition.setPositioMode(Integer.parseInt(positions[4]));
+                                //添加分发数据
+                                dataPackTargetList.add(new DataPackTarget(ETargetType.POSITION, dataTargetPosition));
+                                break;
+                            case 0x05:
+                                System.out.println("## 无效");
+                                break;
+                        }
                         break;
                     case 0x1621:
                         System.out.println("## 0x1621 - 3.2.2 取得车辆当前检测数据");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+                        //故障等级
+                        int alarmLevel = buffer.readUnsignedByte();
+                        //故障码个数
+                        count = buffer.readUnsignedByte();
+                        dataTargetList = new ArrayList<DataTargetAlarm>();
+                        //故障码列表
+                        for(int i = 0;i < count;i ++){
+                            //故障码
+                            String code = DataTool.readStringZero(buffer);
+                            //故障码属性
+                            String value = DataTool.readStringZero(buffer);
+                            //故障码解释
+                            String desc = DataTool.readStringZero(buffer);
+
+                            DataTargetAlarm dataTargetAlarm = new DataTargetAlarm();
+                            dataTargetAlarm.setAlarmName("故障码");
+                            dataTargetAlarm.setAlarmCode(code);
+                            dataTargetAlarm.setAlarmValue(value);
+                            dataTargetAlarm.setAlarmDesc(desc);
+
+                            dataTargetList.add(dataTargetAlarm);
+                        }
+
+                        dataTargetSet = new DataTargetSet(dataTarget);
+                        dataTargetSet.setDataTargetList(dataTargetList);
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.ALARMLIST, dataTargetSet));
                         break;
                     case 0x1622:
                         System.out.println("## 0x1622 - 3.2.3 根据索引 ID 取得相应的检测数据");
-                        break;
                     case 0x1623:
                         System.out.println("## 0x1623 - 3.2.4 车辆诊断参数设定");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+                        //项数
+                        count = buffer.readUnsignedShort();
+                        dataTargetPeakList = new ArrayList<DataTargetPeak>();
+                        //数据项内容
+                        for(int i = 0; i < count; i++){
+                            DataTargetPeak dataTargetPeak = new DataTargetPeak();
+                            //数据项id
+                            Integer id = buffer.readUnsignedShort();
+                            //数据项内容
+                            String content = DataTool.readStringZero(buffer);
+
+                            dataTargetPeak.setPeakName(Integer.toHexString(id));
+                            dataTargetPeak.setPeakValue(content);
+
+                            dataTargetPeakList.add(dataTargetPeak);
+                        }
+                        dataTargetSet = new DataTargetSet(dataTarget);
+                        dataTargetSet.setDataTargetList(dataTargetPeakList);
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.PEAKLIST, dataTargetSet));
                         break;
                     case 0x1624:
                         System.out.println("## 0x1624 - 3.2.5 清空累计平均油耗");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+                        //错误代码
+                        int resultCode = buffer.readUnsignedByte();
+
+                        DataTargetResult dataTargetResult = new DataTargetResult(dataTarget);
+                        dataTargetResult.setResultCode(resultCode);
+
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.RESULT, dataTargetResult));
                         break;
                     case 0x1625:
                         System.out.println("## 0x1625 - 3.2.6 取得系统版本信息");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+
+                        dataTargetDevice = new DataTargetDevice(dataTarget);
+                        //硬件版本号
+                        dataTargetDevice.setHardwareVersion(DataTool.readStringZero(buffer));
+                        //固件版本号
+                        dataTargetDevice.setFirmwareVersion(DataTool.readStringZero(buffer));
+                        //软件版本号
+                        dataTargetDevice.setSoftwareVersion(DataTool.readStringZero(buffer));
+                        //软件类别ID
+                        dataTargetDevice.setSoftwareTypeId((int)buffer.readUnsignedByte());
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.DEVICE, dataTargetDevice));
                         break;
                     case 0x1626:
                         System.out.println("## 0x1626 - 3.2.7 清除车辆故障码");
-                        break;
                     case 0x16E0:
                         System.out.println("## 0x16E0 - 3.3.1 恢复出厂设置");
+                        // 1.设备号
+                        dataTarget.setObdCode(DataTool.readStringZero(buffer));
+                        // 2.TripID
+                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        // 3.VID
+                        dataTarget.setVid(DataTool.readStringZero(buffer));
+                        // 4.VIN
+                        dataTarget.setVin(DataTool.readStringZero(buffer));
+                        //错误代码
+                        resultCode = buffer.readUnsignedByte();
+
+                        dataTargetResult = new DataTargetResult(dataTarget);
+                        dataTargetResult.setResultCode(resultCode);
+
+                        //添加分发数据
+                        dataPackTargetList.add(new DataPackTarget(ETargetType.RESULT, dataTargetResult));
+                        break;
+                    default:
+                        _logger.info("未知的协议id：" + commandId);
                         break;
                 }
 

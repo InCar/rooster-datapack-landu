@@ -28,8 +28,8 @@ public class DataParserLandu implements IDataParser {
         /**
          * 声明数据包版本与解析器类关系
          */
-        /*DataParserManager.register("china-landu-2.05", DataParserManager.class);*/
-        DataParserManager.register("china-landu-3.08", DataParserManager.class);
+        /*DataParserManager.register("china-landu-2.05", DataParserLandu.class);*/
+        DataParserManager.register("china-landu-3.08", DataParserLandu.class);
     }
 
     /**

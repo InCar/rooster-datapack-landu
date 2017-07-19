@@ -11,9 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 /**
  * LANDU Parser.
@@ -883,5 +881,40 @@ public class DataParserLandu implements IDataParser {
         }
 
         return dataPackTargetList;
+    }
+
+    @Override
+    public Map<String, Object> getSerialNumber(DataPack dataPack) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        byte[] dataPackBytes = Base64.getDecoder().decode(dataPack.getDataB64());
+        if(validate(dataPackBytes)) {
+            ByteBuf buffer = null;
+            // 初始化ByteBuf
+            buffer = Unpooled.wrappedBuffer(dataPackBytes);
+            // 跳过“标志+长度+长度校验”6个字节
+            LanduDataPackUtil.readBytes(buffer, 6);
+            // 数据包ID
+            LanduDataPackUtil.readByte(buffer);
+            // 协议格式版本
+            LanduDataPackUtil.readByte(buffer);
+            // 命令字
+            LanduDataPackUtil.readUInt2(buffer);
+            // 1.设备号
+            String deviceId = DataTool.readStringZero(buffer);
+            map.put("deviceId", deviceId);
+            // 2.TripID
+            buffer.readUnsignedShort();
+            // 3.VID
+            DataTool.readStringZero(buffer);
+            // 4.VIN
+            String vin = DataTool.readStringZero(buffer);
+            map.put("vin", vin);
+
+            // 释放ByteBuf
+            if(null != buffer) {
+                buffer.release();
+            }
+        }
+        return map;
     }
 }

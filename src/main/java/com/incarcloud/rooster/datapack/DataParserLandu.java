@@ -886,6 +886,9 @@ public class DataParserLandu implements IDataParser {
     @Override
     public Map<String, Object> getSerialNumber(ByteBuf buffer) {
         Map<String, Object> map = new HashMap<String, Object>();
+
+        buffer.markReaderIndex();
+
         // 跳过10个字节
         LanduDataPackUtil.readBytes(buffer, 10);
         // 1.设备号
@@ -899,10 +902,8 @@ public class DataParserLandu implements IDataParser {
         String vin = DataTool.readStringZero(buffer);
         map.put("vin", vin);
 
-        // 释放ByteBuf
-        if(null != buffer) {
-            buffer.release();
-        }
+        buffer.resetReaderIndex();
+
         return map;
     }
 }

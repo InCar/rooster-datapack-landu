@@ -277,7 +277,8 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataTarget.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
-                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
+//                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
+                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
 
                         // 6.车辆状态
                         switch (LanduDataPackUtil.readByte(buffer)) {
@@ -438,8 +439,9 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataTarget.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
-                        String dateStr = DataTool.readStringZero(buffer);
-                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+//                        String dateStr = DataTool.readStringZero(buffer);
+//                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
                         //报警类型
                         int alarmType = buffer.readUnsignedByte();
                         switch (alarmType){
@@ -589,8 +591,9 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataTarget.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
-                        dateStr = DataTool.readStringZero(buffer);
-                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+//                        dateStr = DataTool.readStringZero(buffer);
+//                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
 
                         //冻结帧个数
                         count = buffer.readUnsignedShort();
@@ -624,8 +627,9 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataTarget.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
-                        dateStr = DataTool.readStringZero(buffer);
-                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+//                        dateStr = DataTool.readStringZero(buffer);
+//                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
 
                         //故障码个数
                         int alarmCount = buffer.readUnsignedByte();
@@ -685,8 +689,10 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataTarget.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
-                        dateStr = DataTool.readStringZero(buffer);
-                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+//                        dateStr = DataTool.readStringZero(buffer);
+//                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
+                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
+
                         //数据类型
                         int dataType = buffer.readUnsignedByte();
                         switch (dataType){

@@ -3,6 +3,8 @@ package com.incarcloud.rooster.datapack;/**
  */
 
 import com.incarcloud.rooster.gather.cmd.CommandType;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * @author Fan Beibei
@@ -22,11 +24,14 @@ public class LanduCommandFacotry implements CommandFacotry {
      * @param type     命令类型
      * @return
      */
-    public byte[] createCommand(CommandType type){//TODO 待实现
+    public ByteBuf createCommand(CommandType type){//TODO 待实现
 
         byte[] cmd = "111111111".getBytes();
 
-        return cmd;
+        ByteBuf cmdBuf = Unpooled.buffer(cmd.length);
+        cmdBuf.writeBytes(cmd);
+
+        return cmdBuf;
 
 
     }

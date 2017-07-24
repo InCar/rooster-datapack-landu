@@ -4,9 +4,6 @@ package com.incarcloud.rooster.datapack;/**
 
 import com.incarcloud.rooster.gather.cmd.CommandType;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-
-import java.nio.ByteBuffer;
 
 /**
  * @author Fan Beibei
@@ -16,6 +13,7 @@ import java.nio.ByteBuffer;
 public class LanduCommandFacotry implements CommandFacotry {
 
     static {
+        CommandFacotryManager.registerCommandFacotry("china-landu-2.05", LanduCommandFacotry.class);
         CommandFacotryManager.registerCommandFacotry("china-landu-3.08", LanduCommandFacotry.class);
     }
 
@@ -26,14 +24,8 @@ public class LanduCommandFacotry implements CommandFacotry {
      * @param type 命令类型
      * @return
      */
-    public ByteBuf createCommand(CommandType type) {//TODO 待实现
-
-        byte[] cmd = "111111111".getBytes();
-        ByteBuf cmdBuf = Unpooled.buffer(cmd.length);
-        cmdBuf.writeBytes(cmd);
-
-        return cmdBuf;
-
-
+    public ByteBuf createCommand(CommandType type) {
+        // 目前LANDU(2.05/3.08)不支持CommandType类型
+        return null;
     }
 }

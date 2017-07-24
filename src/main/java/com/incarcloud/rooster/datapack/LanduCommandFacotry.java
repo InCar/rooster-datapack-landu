@@ -3,6 +3,10 @@ package com.incarcloud.rooster.datapack;/**
  */
 
 import com.incarcloud.rooster.gather.cmd.CommandType;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
+import java.nio.ByteBuffer;
 
 /**
  * @author Fan Beibei
@@ -12,21 +16,23 @@ import com.incarcloud.rooster.gather.cmd.CommandType;
 public class LanduCommandFacotry implements CommandFacotry {
 
     static {
-        CommandFacotryManager.registerCommandFacotry("china-landu-3.08",LanduCommandFacotry.class);
+        CommandFacotryManager.registerCommandFacotry("china-landu-3.08", LanduCommandFacotry.class);
     }
 
 
     /**
      * 创建二进制命令,若不支持此命令则返回null
      *
-     * @param type     命令类型
+     * @param type 命令类型
      * @return
      */
-    public byte[] createCommand(CommandType type){//TODO 待实现
+    public ByteBuf createCommand(CommandType type) {//TODO 待实现
 
         byte[] cmd = "111111111".getBytes();
+        ByteBuf cmdBuf = Unpooled.buffer(cmd.length);
+        cmdBuf.writeBytes(cmd);
 
-        return cmd;
+        return cmdBuf;
 
 
     }

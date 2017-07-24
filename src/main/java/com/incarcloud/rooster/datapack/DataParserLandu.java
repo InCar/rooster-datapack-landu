@@ -2,7 +2,6 @@ package com.incarcloud.rooster.datapack;
 
 import com.incarcloud.rooster.datatarget.*;
 import com.incarcloud.rooster.util.DataTool;
-import com.incarcloud.rooster.util.DateUtil;
 import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -20,16 +19,15 @@ import java.util.*;
  * @since 2.0
  */
 public class DataParserLandu implements IDataParser {
+
     private static Logger _logger = LoggerFactory.getLogger(DataParserLandu.class);
-    private static final  String GROUP="china";
-    private static  final String  NAME="landu";
 
     static {
         /**
          * 声明数据包版本与解析器类关系
          */
-        DataParserManager.register(GROUP+"-"+NAME+"-2.05", DataParserLandu.class);
-        DataParserManager.register(GROUP+"-"+NAME+"-3.08", DataParserLandu.class);
+        DataParserManager.register("china-landu-2.05", DataParserLandu.class);
+        DataParserManager.register("china-landu-3.08", DataParserLandu.class);
     }
 
 
@@ -141,7 +139,7 @@ public class DataParserLandu implements IDataParser {
                                 }
 
                                 // 打包
-                                dataPack = new DataPack(GROUP, NAME, version);
+                                dataPack = new DataPack("china", "landu", version);
                                 dataPack.setBuf(buffer.slice(offset, length + 2));
                                 dataPackList.add(dataPack);
 
@@ -276,14 +274,15 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        //dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
                         dataTarget.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
-//                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
-                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
+                        //dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
+                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
 
                         // 6.车辆状态
                         switch (LanduDataPackUtil.readByte(buffer)) {
@@ -438,15 +437,13 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
                         dataTarget.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
-//                        String dateStr = DataTool.readStringZero(buffer);
-//                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
-                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
+                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
                         //报警类型
                         int alarmType = buffer.readUnsignedByte();
                         switch (alarmType){
@@ -515,7 +512,7 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
@@ -543,7 +540,7 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
@@ -590,15 +587,13 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
                         dataTarget.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
-//                        dateStr = DataTool.readStringZero(buffer);
-//                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
-                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
+                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
 
                         //冻结帧个数
                         count = buffer.readUnsignedShort();
@@ -626,15 +621,13 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
                         dataTarget.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
-//                        dateStr = DataTool.readStringZero(buffer);
-//                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
-                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
+                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
 
                         //故障码个数
                         int alarmCount = buffer.readUnsignedByte();
@@ -688,15 +681,13 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
                         dataTarget.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
-//                        dateStr = DataTool.readStringZero(buffer);
-//                        dataTarget.setDetectionDate(DateUtil.parseDate(dateStr, "yyyy-MM-dd HH:mm:ss"));
-                        dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
+                        dataTarget.setDetectionDate(LanduDataPackUtil.readDate(buffer));
 
                         //数据类型
                         int dataType = buffer.readUnsignedByte();
@@ -745,7 +736,7 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
@@ -785,7 +776,7 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
@@ -816,7 +807,7 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
@@ -835,7 +826,7 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
@@ -860,7 +851,7 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataTarget.setObdCode(DataTool.readStringZero(buffer));
                         // 2.TripID
-                        dataTarget.setTripId(buffer.readUnsignedShort());
+                        dataTarget.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataTarget.setVid(DataTool.readStringZero(buffer));
                         // 4.VIN
@@ -896,27 +887,46 @@ public class DataParserLandu implements IDataParser {
 
     @Override
     public Map<String, Object> getMetaData(ByteBuf buffer) {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> metaDataMap = new HashMap<String, Object>();
 
         buffer.markReaderIndex();
 
-        // 跳过10个字节
-        LanduDataPackUtil.readBytes(buffer, 10);
+        // 跳过"标志+长度+校验+数据包ID"
+        LanduDataPackUtil.readBytes(buffer, 7);
+
+        // 0.协议版本
+        String version = null;
+        switch (LanduDataPackUtil.readByte(buffer)) {
+            case 0x02:
+                version = "2.05";
+                break;
+            case 0x05:
+                version = "3.08";
+                break;
+            default:
+                version = "unknown";
+        }
+        metaDataMap.put("protocol", "china-landu-" + version);
+
+        // 跳过"命令字"
+        LanduDataPackUtil.readBytes(buffer, 2);
+
         // 1.设备号
-        String deviceId = DataTool.readStringZero(buffer);
-        map.put("deviceId", deviceId);
+        metaDataMap.put("deviceId", DataTool.readStringZero(buffer));
+
         // 2.TripID
-        buffer.readUnsignedShort();
+        //buffer.readUnsignedShort();
+        LanduDataPackUtil.readDWord(buffer);
+
         // 3.VID
         DataTool.readStringZero(buffer);
+
         // 4.VIN
-        String vin = DataTool.readStringZero(buffer);
-        map.put("vin", vin);
+        metaDataMap.put("vin", DataTool.readStringZero(buffer));
 
-        map.put("protocol","");
-
+        // 重置readerIndex为0
         buffer.resetReaderIndex();
 
-        return map;
+        return metaDataMap;
     }
 }

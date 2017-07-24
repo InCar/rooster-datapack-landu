@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Test DataParserLANDU class
@@ -121,5 +122,12 @@ public class DataParserLanduTest {
         List<DataPack> dataPackList = parser.extract(buffer);
         List<DataPackTarget> dataPackTargetList = parser.extractBody(dataPackList.get(0));
         Assert.assertNotEquals(0, dataPackTargetList);
+    }
+
+    @Test
+    public void testGetMetaData() throws Exception {
+        IDataParser parser = new DataParserLandu();
+        Map<String, Object> metaDataMap = parser.getMetaData(buffer);
+        Assert.assertEquals(3, metaDataMap.size());
     }
 }

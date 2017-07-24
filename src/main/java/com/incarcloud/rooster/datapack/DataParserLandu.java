@@ -21,14 +21,19 @@ import java.util.*;
  */
 public class DataParserLandu implements IDataParser {
     private static Logger _logger = LoggerFactory.getLogger(DataParserLandu.class);
+    private static final  String GROUP="china";
+    private static  final String  NAME="landu";
 
     static {
         /**
          * 声明数据包版本与解析器类关系
          */
-        /*DataParserManager.register("china-landu-2.05", DataParserLandu.class);*/
-        DataParserManager.register("china-landu-3.08", DataParserLandu.class);
+        DataParserManager.register(GROUP+"-"+NAME+"-2.05", DataParserLandu.class);
+        DataParserManager.register(GROUP+"-"+NAME+"-3.08", DataParserLandu.class);
     }
+
+
+
 
     /**
      * 数据包准许最大容量2M
@@ -136,7 +141,7 @@ public class DataParserLandu implements IDataParser {
                                 }
 
                                 // 打包
-                                dataPack = new DataPack("china", "landu", version);
+                                dataPack = new DataPack(GROUP, NAME, version);
                                 dataPack.setBuf(buffer.slice(offset, length + 2));
                                 dataPackList.add(dataPack);
 
@@ -890,7 +895,7 @@ public class DataParserLandu implements IDataParser {
     }
 
     @Override
-    public Map<String, Object> getSerialNumber(ByteBuf buffer) {
+    public Map<String, Object> getMetaData(ByteBuf buffer) {
         Map<String, Object> map = new HashMap<String, Object>();
 
         buffer.markReaderIndex();
@@ -907,6 +912,8 @@ public class DataParserLandu implements IDataParser {
         // 4.VIN
         String vin = DataTool.readStringZero(buffer);
         map.put("vin", vin);
+
+        map.put("protocol","");
 
         buffer.resetReaderIndex();
 

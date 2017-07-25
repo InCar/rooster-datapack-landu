@@ -330,7 +330,6 @@ public class DataParserLandu implements IDataParser {
                                 // 0x02-发动机运行中
                                 System.out.println("## 发动机运行中");
                                 int count = buffer.readUnsignedShort();
-                                List<DataPackPeak> dataPackPeakList = new ArrayList<>();
                                 for(int i = 0; i < count; i++){
                                     DataPackPeak dataPackPeak = new DataPackPeak(dataPackObject);
                                     //数据项id
@@ -341,12 +340,9 @@ public class DataParserLandu implements IDataParser {
                                     dataPackPeak.setPeakName(Integer.toHexString(id));
                                     dataPackPeak.setPeakValue(content);
 
-                                    dataPackPeakList.add(dataPackPeak);
+                                    //添加分发数据
+                                    dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                                 }
-                                DataPackSet dataPackSet = new DataPackSet(dataPackObject);
-                                dataPackSet.setDataPackList(dataPackPeakList);
-                                //添加分发数据
-                                dataPackTargetList.add(new DataPackTarget(dataPackSet));
                                 break;
                             case 0x03:
                                 // 0x03-发动机熄火时
@@ -460,7 +456,6 @@ public class DataParserLandu implements IDataParser {
                                 System.out.println("## 新故障码报警: ");
                                 //故障码个数
                                 int count = buffer.readUnsignedByte();
-                                List<DataPackAlarm> dataPackList = new ArrayList<>();
                                 for(int i = 0;i < count;i ++){
                                     //故障码
                                     String code = DataTool.readStringZero(buffer);
@@ -472,13 +467,9 @@ public class DataParserLandu implements IDataParser {
                                     dataPackAlarm.setAlarmCode(code);
                                     dataPackAlarm.setAlarmValue(value);
 
-                                    dataPackList.add(dataPackAlarm);
+                                    //添加分发数据
+                                    dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 }
-
-                                DataPackSet dataPackSet = new DataPackSet(dataPackObject);
-                                dataPackSet.setDataPackList(dataPackList);
-                                //添加分发数据
-                                dataPackTargetList.add(new DataPackTarget(dataPackSet));
                                 break;
                             case 0x02:
                                 System.out.println("## 碰撞报警/异常震动报警: ");
@@ -557,7 +548,6 @@ public class DataParserLandu implements IDataParser {
 
                         //定位信息个数
                         int count = buffer.readUnsignedByte();
-                        List<DataPackPosition> dataPackPositionList = new ArrayList<>();
                         //定位信息列表
                         for(int i = 0;i < count;i ++){
                             //定位信息
@@ -584,12 +574,9 @@ public class DataParserLandu implements IDataParser {
                             //定位方式：0-无效数据，1-基站定位，2-GPS 定位
                             dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
 
-                            dataPackPositionList.add(dataPackPosition);
+                            //添加分发数据
+                            dataPackTargetList.add(new DataPackTarget(dataPackPosition));
                         }
-                        DataPackSet dataPackSet = new DataPackSet(dataPackObject);
-                        dataPackSet.setDataPackList(dataPackPositionList);
-                        //添加分发数据
-                        dataPackTargetList.add(new DataPackTarget(dataPackSet));
                         break;
                     case 0x1607:
                         System.out.println("## 0x1607 - 3.1.6 冻结帧数据");
@@ -606,7 +593,6 @@ public class DataParserLandu implements IDataParser {
 
                         //冻结帧个数
                         count = buffer.readUnsignedShort();
-                        List<DataPackPeak> dataPackPeakList = new ArrayList<>();
                         //冻结帧列表
                         for(int i = 0; i < count; i++){
                             DataPackPeak dataPackPeak = new DataPackPeak(dataPackObject);
@@ -618,12 +604,9 @@ public class DataParserLandu implements IDataParser {
                             dataPackPeak.setPeakName(Integer.toHexString(id));
                             dataPackPeak.setPeakValue(content);
 
-                            dataPackPeakList.add(dataPackPeak);
+                            //添加分发数据
+                            dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                         }
-                        dataPackSet = new DataPackSet(dataPackObject);
-                        dataPackSet.setDataPackList(dataPackPeakList);
-                        //添加分发数据
-                        dataPackTargetList.add(new DataPackTarget(dataPackSet));
                         break;
                     case 0x1608:
                         System.out.println("## 0x1608 - 3.1.7 怠速车况数据");
@@ -640,7 +623,6 @@ public class DataParserLandu implements IDataParser {
 
                         //故障码个数
                         int alarmCount = buffer.readUnsignedByte();
-                        List<DataPackAlarm> dataPackList = new ArrayList<>();
                         //故障码列表
                         for(int i = 0;i < alarmCount;i ++){
                             //故障码
@@ -656,17 +638,12 @@ public class DataParserLandu implements IDataParser {
                             dataPackAlarm.setAlarmValue(value);
                             dataPackAlarm.setAlarmDesc(desc);
 
-                            dataPackList.add(dataPackAlarm);
+                            //添加分发数据
+                            dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                         }
-
-                        dataPackSet = new DataPackSet(dataPackObject);
-                        dataPackSet.setDataPackList(dataPackList);
-                        //添加分发数据
-                        dataPackTargetList.add(new DataPackTarget(dataPackSet));
 
                         //数据流个数
                         count = buffer.readUnsignedShort();
-                        dataPackPeakList = new ArrayList<>();
                         //数据流列表(车况信息)
                         for(int i = 0; i < count; i++){
                             DataPackPeak dataPackPeak = new DataPackPeak(dataPackObject);
@@ -678,12 +655,9 @@ public class DataParserLandu implements IDataParser {
                             dataPackPeak.setPeakName(Integer.toHexString(id));
                             dataPackPeak.setPeakValue(content);
 
-                            dataPackPeakList.add(dataPackPeak);
+                            //添加分发数据
+                            dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                         }
-                        dataPackSet = new DataPackSet(dataPackObject);
-                        dataPackSet.setDataPackList(dataPackPeakList);
-                        //添加分发数据
-                        dataPackTargetList.add(new DataPackTarget(dataPackSet));
                         break;
                     case 0x160A:
                         System.out.println("## 0x160A - 3.1.9 行为位置数据");
@@ -754,7 +728,6 @@ public class DataParserLandu implements IDataParser {
                         int alarmLevel = buffer.readUnsignedByte();
                         //故障码个数
                         count = buffer.readUnsignedByte();
-                        dataPackList = new ArrayList<>();
                         //故障码列表
                         for(int i = 0;i < count;i ++){
                             //故障码
@@ -770,13 +743,9 @@ public class DataParserLandu implements IDataParser {
                             dataPackAlarm.setAlarmValue(value);
                             dataPackAlarm.setAlarmDesc(desc);
 
-                            dataPackList.add(dataPackAlarm);
+                            //添加分发数据
+                            dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                         }
-
-                        dataPackSet = new DataPackSet(dataPackObject);
-                        dataPackSet.setDataPackList(dataPackList);
-                        //添加分发数据
-                        dataPackTargetList.add(new DataPackTarget(dataPackSet));
                         break;
                     case 0x1622:
                         System.out.println("## 0x1622 - 3.2.3 根据索引 ID 取得相应的检测数据");
@@ -792,7 +761,6 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setVin(DataTool.readStringZero(buffer));
                         //项数
                         count = buffer.readUnsignedShort();
-                        dataPackPeakList = new ArrayList<>();
                         //数据项内容
                         for(int i = 0; i < count; i++){
                             DataPackPeak dataPackPeak = new DataPackPeak(dataPackObject);
@@ -804,12 +772,9 @@ public class DataParserLandu implements IDataParser {
                             dataPackPeak.setPeakName(Integer.toHexString(id));
                             dataPackPeak.setPeakValue(content);
 
-                            dataPackPeakList.add(dataPackPeak);
+                            //添加分发数据
+                            dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                         }
-                        dataPackSet = new DataPackSet(dataPackObject);
-                        dataPackSet.setDataPackList(dataPackPeakList);
-                        //添加分发数据
-                        dataPackTargetList.add(new DataPackTarget(dataPackSet));
                         break;
                     case 0x1624:
                         System.out.println("## 0x1624 - 3.2.5 清空累计平均油耗");

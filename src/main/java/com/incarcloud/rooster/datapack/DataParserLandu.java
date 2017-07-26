@@ -343,9 +343,11 @@ public class DataParserLandu implements IDataParser {
                                     dataPackPeak.setPeakValue(content);
                                     // 完善数据信息
                                     LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                                    dataPackPeak.setPeakName(peak.getPeakName());
-                                    dataPackPeak.setPeakUnit(peak.getPeakUnit());
-                                    dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                                    if(null != peak) {
+                                        dataPackPeak.setPeakName(peak.getPeakName());
+                                        dataPackPeak.setPeakUnit(peak.getPeakUnit());
+                                        dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                                    }
 
                                     //添加分发数据
                                     dataPackTargetList.add(new DataPackTarget(dataPackPeak));
@@ -613,9 +615,11 @@ public class DataParserLandu implements IDataParser {
                             dataPackPeak.setPeakValue(content);
                             // 完善数据信息
                             LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                            dataPackPeak.setPeakName(peak.getPeakName());
-                            dataPackPeak.setPeakUnit(peak.getPeakUnit());
-                            dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            if(null != peak) {
+                                dataPackPeak.setPeakName(peak.getPeakName());
+                                dataPackPeak.setPeakUnit(peak.getPeakUnit());
+                                dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            }
 
                             //添加分发数据
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
@@ -670,9 +674,11 @@ public class DataParserLandu implements IDataParser {
                             dataPackPeak.setPeakValue(content);
                             // 完善数据信息
                             LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                            dataPackPeak.setPeakName(peak.getPeakName());
-                            dataPackPeak.setPeakUnit(peak.getPeakUnit());
-                            dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            if(null != peak) {
+                                dataPackPeak.setPeakName(peak.getPeakName());
+                                dataPackPeak.setPeakUnit(peak.getPeakUnit());
+                                dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            }
 
                             //添加分发数据
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
@@ -793,9 +799,11 @@ public class DataParserLandu implements IDataParser {
                             dataPackPeak.setPeakValue(content);
                             // 完善数据信息
                             LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                            dataPackPeak.setPeakName(peak.getPeakName());
-                            dataPackPeak.setPeakUnit(peak.getPeakUnit());
-                            dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            if(null != peak) {
+                                dataPackPeak.setPeakName(peak.getPeakName());
+                                dataPackPeak.setPeakUnit(peak.getPeakUnit());
+                                dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            }
 
                             //添加分发数据
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));

@@ -1,6 +1,7 @@
 package com.incarcloud.rooster.datapack;
 
 import com.incarcloud.rooster.util.DataTool;
+import com.incarcloud.rooster.util.LanduDataClassifyUtil;
 import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -337,8 +338,14 @@ public class DataParserLandu implements IDataParser {
                                     //数据项内容
                                     String content = DataTool.readStringZero(buffer);
 
-                                    dataPackPeak.setPeakName(Integer.toHexString(id));
+                                    // 设置数值信息
+                                    dataPackPeak.setPeakId(id);
                                     dataPackPeak.setPeakValue(content);
+                                    // 完善数据信息
+                                    LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
+                                    dataPackPeak.setPeakName(peak.getPeakName());
+                                    dataPackPeak.setPeakUnit(peak.getPeakUnit());
+                                    dataPackPeak.setPeakDesc(peak.getPeakDesc());
 
                                     //添加分发数据
                                     dataPackTargetList.add(new DataPackTarget(dataPackPeak));
@@ -601,8 +608,14 @@ public class DataParserLandu implements IDataParser {
                             //数据项内容
                             String content = DataTool.readStringZero(buffer);
 
-                            dataPackPeak.setPeakName(Integer.toHexString(id));
+                            // 设置数值信息
+                            dataPackPeak.setPeakId(id);
                             dataPackPeak.setPeakValue(content);
+                            // 完善数据信息
+                            LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
+                            dataPackPeak.setPeakName(peak.getPeakName());
+                            dataPackPeak.setPeakUnit(peak.getPeakUnit());
+                            dataPackPeak.setPeakDesc(peak.getPeakDesc());
 
                             //添加分发数据
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
@@ -652,8 +665,14 @@ public class DataParserLandu implements IDataParser {
                             //数据项内容
                             String content = DataTool.readStringZero(buffer);
 
-                            dataPackPeak.setPeakName(Integer.toHexString(id));
+                            // 设置数值信息
+                            dataPackPeak.setPeakId(id);
                             dataPackPeak.setPeakValue(content);
+                            // 完善数据信息
+                            LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
+                            dataPackPeak.setPeakName(peak.getPeakName());
+                            dataPackPeak.setPeakUnit(peak.getPeakUnit());
+                            dataPackPeak.setPeakDesc(peak.getPeakDesc());
 
                             //添加分发数据
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
@@ -769,8 +788,14 @@ public class DataParserLandu implements IDataParser {
                             //数据项内容
                             String content = DataTool.readStringZero(buffer);
 
-                            dataPackPeak.setPeakName(Integer.toHexString(id));
+                            // 设置数值信息
+                            dataPackPeak.setPeakId(id);
                             dataPackPeak.setPeakValue(content);
+                            // 完善数据信息
+                            LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
+                            dataPackPeak.setPeakName(peak.getPeakName());
+                            dataPackPeak.setPeakUnit(peak.getPeakUnit());
+                            dataPackPeak.setPeakDesc(peak.getPeakDesc());
 
                             //添加分发数据
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));

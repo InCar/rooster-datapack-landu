@@ -492,7 +492,7 @@ public class DataParserLandu implements IDataParser {
                                 String waterTemperature = DataTool.readStringZero(buffer);
                                 DataPackAlarm dataPackAlarm = new DataPackAlarm(dataPackObject);
                                 dataPackAlarm.setAlarmName("水温报警");
-                                dataPackAlarm.setAlarmDesc(waterTemperature);
+                                dataPackAlarm.setAlarmValue(waterTemperature);
                                 //添加分发数据
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
@@ -502,7 +502,7 @@ public class DataParserLandu implements IDataParser {
                                 String chargingVoltage = DataTool.readStringZero(buffer);
                                 dataPackAlarm = new DataPackAlarm(dataPackObject);
                                 dataPackAlarm.setAlarmName("充电电压报警");
-                                dataPackAlarm.setAlarmDesc(chargingVoltage);
+                                dataPackAlarm.setAlarmValue(chargingVoltage);
                                 //添加分发数据
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
@@ -512,7 +512,7 @@ public class DataParserLandu implements IDataParser {
                                 String pullOutTime = DataTool.readStringZero(buffer);
                                 dataPackAlarm = new DataPackAlarm(dataPackObject);
                                 dataPackAlarm.setAlarmName("拔下OBD报警");
-                                dataPackAlarm.setAlarmDesc(pullOutTime);
+                                dataPackAlarm.setAlarmValue(pullOutTime);
                                 //添加分发数据
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;

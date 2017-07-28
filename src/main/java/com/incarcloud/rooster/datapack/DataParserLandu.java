@@ -470,11 +470,14 @@ public class DataParserLandu implements IDataParser {
                                     String code = DataTool.readStringZero(buffer);
                                     //故障码属性
                                     String value = DataTool.readStringZero(buffer);
+                                    //故障码描述
+                                    String desc = DataTool.readStringZero(buffer);
 
                                     DataPackAlarm dataPackAlarm = new DataPackAlarm(dataPackObject);
                                     dataPackAlarm.setAlarmName("故障码");
                                     dataPackAlarm.setAlarmCode(code);
                                     dataPackAlarm.setAlarmValue(value);
+                                    dataPackAlarm.setAlarmDesc(desc);
 
                                     //添加分发数据
                                     dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
@@ -759,7 +762,7 @@ public class DataParserLandu implements IDataParser {
                             String code = DataTool.readStringZero(buffer);
                             //故障码属性
                             String value = DataTool.readStringZero(buffer);
-                            //故障码解释
+                            //故障码描述
                             String desc = DataTool.readStringZero(buffer);
 
                             DataPackAlarm dataPackAlarm = new DataPackAlarm(dataPackObject);

@@ -248,6 +248,13 @@ public class DataParserLandu implements IDataParser {
             DataPackObject dataPackObject = new DataPackObject(dataPack);
             DataPackOverview dataPackOverview;
             DataPackPosition dataPackPosition;
+            DataPackPeak dataPackPeak;
+            DataPackPeak.Peak dataPeak;
+            List<DataPackPeak.Peak> dataPeakList;
+            LanduDataClassifyUtil.Peak tempatePeak;
+            DataPackAlarm dataPackAlarm;
+            DataPackAlarm.Alarm dataAlarm;
+            List<DataPackAlarm.Alarm> dataAlarmList;
 
             try {
                 // 初始化ByteBuf
@@ -330,26 +337,33 @@ public class DataParserLandu implements IDataParser {
                             case 0x02:
                                 // 0x02-发动机运行中
                                 System.out.println("## 发动机运行中");
+                                //极值数据个数
                                 int count = buffer.readUnsignedShort();
-                                for(int i = 0; i < count; i++){
-                                    DataPackPeak dataPackPeak = new DataPackPeak(dataPackObject);
-                                    //数据项id
-                                    Integer id = buffer.readUnsignedShort();
-                                    //数据项内容
-                                    String content = DataTool.readStringZero(buffer);
+                                if(0 < count) {
+                                    dataPeakList = new ArrayList<>();
 
-                                    // 设置数值信息
-                                    dataPackPeak.setPeakId(id);
-                                    dataPackPeak.setPeakValue(content);
-                                    // 完善数据信息
-                                    LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                                    if(null != peak) {
-                                        dataPackPeak.setPeakName(peak.getPeakName());
-                                        dataPackPeak.setPeakUnit(peak.getPeakUnit());
-                                        dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                                    for(int i = 0; i < count; i++){
+                                        //数据项id
+                                        Integer id = buffer.readUnsignedShort();
+                                        //数据项内容
+                                        String content = DataTool.readStringZero(buffer);
+
+                                        // 设置数值信息
+                                        dataPeak = new DataPackPeak.Peak(id, content);
+                                        // 完善数据信息
+                                        tempatePeak = LanduDataClassifyUtil.PEAK_MAP.get(id);
+                                        if(null != tempatePeak) {
+                                            dataPeak.setPeakName(tempatePeak.getPeakName());
+                                            dataPeak.setPeakUnit(tempatePeak.getPeakUnit());
+                                            dataPeak.setPeakDesc(tempatePeak.getPeakDesc());
+                                        }
+
+                                        dataPeakList.add(dataPeak);
                                     }
 
                                     //添加分发数据
+                                    dataPackPeak = new DataPackPeak(dataPackObject);
+                                    dataPackPeak.setPeakList(dataPeakList);
                                     dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                                 }
                                 break;
@@ -465,21 +479,28 @@ public class DataParserLandu implements IDataParser {
                                 System.out.println("## 新故障码报警: ");
                                 //故障码个数
                                 int count = buffer.readUnsignedByte();
-                                for(int i = 0;i < count;i ++){
-                                    //故障码
-                                    String code = DataTool.readStringZero(buffer);
-                                    //故障码属性
-                                    String value = DataTool.readStringZero(buffer);
-                                    //故障码描述
-                                    String desc = DataTool.readStringZero(buffer);
+                                if(0 < count) {
+                                    dataAlarmList = new ArrayList<>();
 
-                                    DataPackAlarm dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                    dataPackAlarm.setAlarmName("故障码");
-                                    dataPackAlarm.setAlarmCode(code);
-                                    dataPackAlarm.setAlarmValue(value);
-                                    dataPackAlarm.setAlarmDesc(desc);
+                                    for(int i = 0;i < count;i ++){
+                                        //故障码
+                                        String code = DataTool.readStringZero(buffer);
+                                        //故障码属性
+                                        String value = DataTool.readStringZero(buffer);
+                                        //故障码描述
+                                        String desc = DataTool.readStringZero(buffer);
+
+                                        dataAlarm = new DataPackAlarm.Alarm("故障码");
+                                        dataAlarm.setAlarmCode(code);
+                                        dataAlarm.setAlarmValue(value);
+                                        dataAlarm.setAlarmDesc(desc);
+
+                                        dataAlarmList.add(dataAlarm);
+                                    }
 
                                     //添加分发数据
+                                    dataPackAlarm = new DataPackAlarm(dataPackObject);
+                                    dataPackAlarm.setAlarmList(dataAlarmList);
                                     dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 }
                                 break;
@@ -488,32 +509,41 @@ public class DataParserLandu implements IDataParser {
                                 break;
                             case 0x03:
                                 System.out.println("## 水温报警: ");
+                                dataAlarmList = new ArrayList<>();
                                 //实际水温数值
                                 String waterTemperature = DataTool.readStringZero(buffer);
-                                DataPackAlarm dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmName("水温报警");
-                                dataPackAlarm.setAlarmValue(waterTemperature);
+                                dataAlarm = new DataPackAlarm.Alarm("水温报警");
+                                dataAlarm.setAlarmValue(waterTemperature);
+                                dataAlarmList.add(dataAlarm);
                                 //添加分发数据
+                                dataPackAlarm = new DataPackAlarm(dataPackObject);
+                                dataPackAlarm.setAlarmList(dataAlarmList);
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0x04:
                                 System.out.println("## 充电电压报警: ");
+                                dataAlarmList = new ArrayList<>();
                                 //充电电压值
                                 String chargingVoltage = DataTool.readStringZero(buffer);
-                                dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmName("充电电压报警");
-                                dataPackAlarm.setAlarmValue(chargingVoltage);
+                                dataAlarm = new DataPackAlarm.Alarm("充电电压报警");
+                                dataAlarm.setAlarmValue(chargingVoltage);
+                                dataAlarmList.add(dataAlarm);
                                 //添加分发数据
+                                dataPackAlarm = new DataPackAlarm(dataPackObject);
+                                dataPackAlarm.setAlarmList(dataAlarmList);
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0x05:
                                 System.out.println("## 拔下OBD报警: ");
+                                dataAlarmList = new ArrayList<>();
                                 //设备拔下时间戳
                                 String pullOutTime = DataTool.readStringZero(buffer);
-                                dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmName("拔下OBD报警");
-                                dataPackAlarm.setAlarmValue(pullOutTime);
+                                dataAlarm = new DataPackAlarm.Alarm("拔下OBD报警");
+                                dataAlarm.setAlarmValue(pullOutTime);
+                                dataAlarmList.add(dataAlarm);
                                 //添加分发数据
+                                dataPackAlarm = new DataPackAlarm(dataPackObject);
+                                dataPackAlarm.setAlarmList(dataAlarmList);
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                         }
@@ -605,26 +635,32 @@ public class DataParserLandu implements IDataParser {
 
                         //冻结帧个数
                         count = buffer.readUnsignedShort();
-                        //冻结帧列表
-                        for(int i = 0; i < count; i++){
-                            DataPackPeak dataPackPeak = new DataPackPeak(dataPackObject);
-                            //数据项id
-                            Integer id = buffer.readUnsignedShort();
-                            //数据项内容
-                            String content = DataTool.readStringZero(buffer);
+                        if(0 < count) {
+                            dataPeakList = new ArrayList<>();
 
-                            // 设置数值信息
-                            dataPackPeak.setPeakId(id);
-                            dataPackPeak.setPeakValue(content);
-                            // 完善数据信息
-                            LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                            if(null != peak) {
-                                dataPackPeak.setPeakName(peak.getPeakName());
-                                dataPackPeak.setPeakUnit(peak.getPeakUnit());
-                                dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            //冻结帧列表
+                            for(int i = 0; i < count; i++){
+                                //数据项id
+                                Integer id = buffer.readUnsignedShort();
+                                //数据项内容
+                                String content = DataTool.readStringZero(buffer);
+
+                                // 设置数值信息
+                                dataPeak = new DataPackPeak.Peak(id, content);
+                                // 完善数据信息
+                                tempatePeak = LanduDataClassifyUtil.PEAK_MAP.get(id);
+                                if(null != tempatePeak) {
+                                    dataPeak.setPeakName(tempatePeak.getPeakName());
+                                    dataPeak.setPeakUnit(tempatePeak.getPeakUnit());
+                                    dataPeak.setPeakDesc(tempatePeak.getPeakDesc());
+                                }
+
+                                dataPeakList.add(dataPeak);
                             }
 
                             //添加分发数据
+                            dataPackPeak = new DataPackPeak(dataPackObject);
+                            dataPackPeak.setPeakList(dataPeakList);
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                         }
                         break;
@@ -643,47 +679,60 @@ public class DataParserLandu implements IDataParser {
 
                         //故障码个数
                         int alarmCount = buffer.readUnsignedByte();
-                        //故障码列表
-                        for(int i = 0;i < alarmCount;i ++){
-                            //故障码
-                            String code = DataTool.readStringZero(buffer);
-                            //故障码属性
-                            String value = DataTool.readStringZero(buffer);
-                            //故障码描述
-                            String desc = DataTool.readStringZero(buffer);
+                        if(0 < alarmCount) {
+                            dataAlarmList = new ArrayList<>();
 
-                            DataPackAlarm dataPackAlarm = new DataPackAlarm(dataPackObject);
-                            dataPackAlarm.setAlarmName("故障码");
-                            dataPackAlarm.setAlarmCode(code);
-                            dataPackAlarm.setAlarmValue(value);
-                            dataPackAlarm.setAlarmDesc(desc);
+                            //故障码列表
+                            for(int i = 0;i < alarmCount;i ++){
+                                //故障码
+                                String code = DataTool.readStringZero(buffer);
+                                //故障码属性
+                                String value = DataTool.readStringZero(buffer);
+                                //故障码描述
+                                String desc = DataTool.readStringZero(buffer);
+
+                                dataAlarm = new DataPackAlarm.Alarm("故障码");
+                                dataAlarm.setAlarmCode(code);
+                                dataAlarm.setAlarmValue(value);
+                                dataAlarm.setAlarmDesc(desc);
+
+                                dataAlarmList.add(dataAlarm);
+                            }
 
                             //添加分发数据
+                            dataPackAlarm = new DataPackAlarm(dataPackObject);
+                            dataPackAlarm.setAlarmList(dataAlarmList);
                             dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                         }
 
                         //数据流个数
                         count = buffer.readUnsignedShort();
-                        //数据流列表(车况信息)
-                        for(int i = 0; i < count; i++){
-                            DataPackPeak dataPackPeak = new DataPackPeak(dataPackObject);
-                            //数据项id
-                            Integer id = buffer.readUnsignedShort();
-                            //数据项内容
-                            String content = DataTool.readStringZero(buffer);
+                        if(0 < count) {
+                            dataPeakList = new ArrayList<>();
 
-                            // 设置数值信息
-                            dataPackPeak.setPeakId(id);
-                            dataPackPeak.setPeakValue(content);
-                            // 完善数据信息
-                            LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                            if(null != peak) {
-                                dataPackPeak.setPeakName(peak.getPeakName());
-                                dataPackPeak.setPeakUnit(peak.getPeakUnit());
-                                dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            //数据流列表(车况信息)
+                            for(int i = 0; i < count; i++){
+                                //数据项id
+                                Integer id = buffer.readUnsignedShort();
+                                //数据项内容
+                                String content = DataTool.readStringZero(buffer);
+
+                                // 设置数值信息
+                                dataPeak = new DataPackPeak.Peak(id, content);
+                                // 完善数据信息
+                                tempatePeak = LanduDataClassifyUtil.PEAK_MAP.get(id);
+                                if(null != tempatePeak) {
+                                    dataPeak.setPeakName(tempatePeak.getPeakName());
+                                    dataPeak.setPeakUnit(tempatePeak.getPeakUnit());
+                                    dataPeak.setPeakDesc(tempatePeak.getPeakDesc());
+                                }
+
+                                dataPeakList.add(dataPeak);
                             }
 
                             //添加分发数据
+                            dataPackPeak = new DataPackPeak(dataPackObject);
+                            dataPackPeak.setPeakList(dataPeakList);
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                         }
                         break;
@@ -756,22 +805,29 @@ public class DataParserLandu implements IDataParser {
                         int alarmLevel = buffer.readUnsignedByte();
                         //故障码个数
                         count = buffer.readUnsignedByte();
-                        //故障码列表
-                        for(int i = 0;i < count;i ++){
-                            //故障码
-                            String code = DataTool.readStringZero(buffer);
-                            //故障码属性
-                            String value = DataTool.readStringZero(buffer);
-                            //故障码描述
-                            String desc = DataTool.readStringZero(buffer);
+                        if(0 < count) {
+                            dataAlarmList = new ArrayList<>();
 
-                            DataPackAlarm dataPackAlarm = new DataPackAlarm(dataPackObject);
-                            dataPackAlarm.setAlarmName("故障码");
-                            dataPackAlarm.setAlarmCode(code);
-                            dataPackAlarm.setAlarmValue(value);
-                            dataPackAlarm.setAlarmDesc(desc);
+                            //故障码列表
+                            for(int i = 0;i < count;i ++){
+                                //故障码
+                                String code = DataTool.readStringZero(buffer);
+                                //故障码属性
+                                String value = DataTool.readStringZero(buffer);
+                                //故障码描述
+                                String desc = DataTool.readStringZero(buffer);
+
+                                dataAlarm = new DataPackAlarm.Alarm("故障码");
+                                dataAlarm.setAlarmCode(code);
+                                dataAlarm.setAlarmValue(value);
+                                dataAlarm.setAlarmDesc(desc);
+
+                                dataAlarmList.add(dataAlarm);
+                            }
 
                             //添加分发数据
+                            dataPackAlarm = new DataPackAlarm(dataPackObject);
+                            dataPackAlarm.setAlarmList(dataAlarmList);
                             dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                         }
                         break;
@@ -789,26 +845,32 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setVin(DataTool.readStringZero(buffer));
                         //项数
                         count = buffer.readUnsignedShort();
-                        //数据项内容
-                        for(int i = 0; i < count; i++){
-                            DataPackPeak dataPackPeak = new DataPackPeak(dataPackObject);
-                            //数据项id
-                            Integer id = buffer.readUnsignedShort();
-                            //数据项内容
-                            String content = DataTool.readStringZero(buffer);
+                        if(0 < count) {
+                            dataPeakList = new ArrayList<>();
 
-                            // 设置数值信息
-                            dataPackPeak.setPeakId(id);
-                            dataPackPeak.setPeakValue(content);
-                            // 完善数据信息
-                            LanduDataClassifyUtil.Peak peak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                            if(null != peak) {
-                                dataPackPeak.setPeakName(peak.getPeakName());
-                                dataPackPeak.setPeakUnit(peak.getPeakUnit());
-                                dataPackPeak.setPeakDesc(peak.getPeakDesc());
+                            //数据项内容
+                            for(int i = 0; i < count; i++){
+                                //数据项id
+                                Integer id = buffer.readUnsignedShort();
+                                //数据项内容
+                                String content = DataTool.readStringZero(buffer);
+
+                                // 设置数值信息
+                                dataPeak = new DataPackPeak.Peak(id, content);
+                                // 完善数据信息
+                                tempatePeak = LanduDataClassifyUtil.PEAK_MAP.get(id);
+                                if(null != tempatePeak) {
+                                    dataPeak.setPeakName(tempatePeak.getPeakName());
+                                    dataPeak.setPeakUnit(tempatePeak.getPeakUnit());
+                                    dataPeak.setPeakDesc(tempatePeak.getPeakDesc());
+                                }
+
+                                dataPeakList.add(dataPeak);
                             }
 
                             //添加分发数据
+                            dataPackPeak = new DataPackPeak(dataPackObject);
+                            dataPackPeak.setPeakList(dataPeakList);
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                         }
                         break;

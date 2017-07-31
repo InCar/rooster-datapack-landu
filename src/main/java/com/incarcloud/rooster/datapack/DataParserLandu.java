@@ -312,25 +312,40 @@ public class DataParserLandu implements IDataParser {
                                 dataPackOverview.setStatus(0x01);
                                 // 6.1.2 启动电压(V)
                                 dataPackOverview.setVoltage(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
-                                // 6.1.3 车速(km/h)
-                                dataPackOverview.setSpeed(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
-                                // 6.1.4 当前行程行驶距离(m)
-                                dataPackOverview.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackOverview));
                                 // 6.2 定位信息
                                 dataPackPosition = new DataPackPosition(dataPackObject);
+                                // 6.2.1 车速(km/h)
+                                dataPackPosition.setSpeed(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                                // 6.2.2 当前行程行驶距离(m)
+                                dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
                                 String[] positions = LanduDataPackUtil.splitPositionString(buffer);
-                                // 6.2.1.经度
+                                // 6.2.3.经度
                                 dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
-                                // 6.2.2 纬度
+                                // 6.2.4 纬度
                                 dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
-                                // 6.2.2 方向
-                                dataPackPosition.setDirection(positions[2]);
-                                // 6.2.3 定位时间
+                                // 6.2.5 方向
+                                dataPackPosition.setDirection(Float.parseFloat(positions[2]));
+                                // 6.2.6 定位时间
                                 dataPackPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
-                                // 6.2.4 定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                                // 6.2.7 定位方式：0-无效数据，1-基站定位，2-GPS定位
                                 dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
+                                // 6.2.8 定位方式描述
+                                switch (dataPackPosition.getPositioMode()) {
+                                    case 0:
+                                        // 无效数据
+                                        dataPackPosition.setPositioModeDesc("无效数据");
+                                        break;
+                                    case 1:
+                                        // 基站定位
+                                        dataPackPosition.setPositioModeDesc("基站定位");
+                                        break;
+                                    case 2:
+                                        // GPS定位
+                                        dataPackPosition.setPositioModeDesc("GPS定位");
+                                        break;
+                                }
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackPosition));
                                 break;
@@ -412,35 +427,38 @@ public class DataParserLandu implements IDataParser {
                                 dataPackOverview.setSpeedingTime(buffer.readInt());
                                 //最高车速
                                 dataPackOverview.setMaxSpeed((int) buffer.readUnsignedByte());
-                                //车速
-                                dataPackOverview.setSpeed(Float.parseFloat(DataTool.readStringZero(buffer)));
-                                //当前行程行驶距离
-                                dataPackOverview.setTravelDistance(Integer.parseInt(DataTool.readStringZero(buffer)));
-                                // --add
-                                dataPackTargetList.add(new DataPackTarget(dataPackOverview));
                                 //定位信息
                                 dataPackPosition = new DataPackPosition(dataPackObject);
-                                positions = DataTool.readStringZero(buffer).split(",");
-                                //经度
-                                String lngStr = positions[0];
-                                Double lng = 0d;
-                                if(lngStr != null && !"-".equals(lngStr)){
-                                    lng = Double.parseDouble(lngStr);
-                                }
-                                dataPackPosition.setLongitude(lng);
-                                // 6.2.2 纬度
-                                String latStr = positions[1];
-                                Double lat = 0d;
-                                if(latStr != null && !"-".equals(latStr)){
-                                    lat = Double.parseDouble(latStr);
-                                }
-                                dataPackPosition.setLatitude(lat);
-                                //方向
-                                dataPackPosition.setDirection(positions[2]);
-                                //定位时间
+                                //定位信息-车速(km/h)
+                                dataPackPosition.setSpeed(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                                //定位信息-当前行程行驶距离(m)
+                                dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
+                                positions = LanduDataPackUtil.splitPositionString(buffer);
+                                //定位信息-经度
+                                dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
+                                //定位信息-纬度
+                                dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
+                                //定位信息-方向
+                                dataPackPosition.setDirection(Float.parseFloat(positions[2]));
+                                //定位信息-定位时间
                                 dataPackPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
-                                //定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                                //定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
                                 dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
+                                //定位信息-定位方式描述
+                                switch (dataPackPosition.getPositioMode()) {
+                                    case 0:
+                                        // 无效数据
+                                        dataPackPosition.setPositioModeDesc("无效数据");
+                                        break;
+                                    case 1:
+                                        // 基站定位
+                                        dataPackPosition.setPositioModeDesc("基站定位");
+                                        break;
+                                    case 2:
+                                        // GPS定位
+                                        dataPackPosition.setPositioModeDesc("GPS定位");
+                                        break;
+                                }
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackPosition));
                                 break;
@@ -472,8 +490,43 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setVin(DataTool.readStringZero(buffer));
                         // 5.检测数据时间
                         dataPackObject.setDetectionDate(LanduDataPackUtil.readDate(buffer));
-                        //报警类型
+                        // 6.报警类型
                         int alarmType = buffer.readUnsignedByte();
+                        // 7.定位信息
+                        dataPackPosition = new DataPackPosition(dataPackObject);
+                        // 7.1 车速(km/h)
+                        dataPackPosition.setSpeed(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                        // 7.2 当前行程行驶距离(m)
+                        dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
+                        String[] positions = LanduDataPackUtil.splitPositionString(buffer);
+                        // 7.3.经度
+                        dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
+                        // 7.4 纬度
+                        dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
+                        // 7.5 方向
+                        dataPackPosition.setDirection(Float.parseFloat(positions[2]));
+                        // 7.6 定位时间
+                        dataPackPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
+                        // 7.7 定位方式：0-无效数据，1-基站定位，2-GPS定位
+                        dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
+                        // 7.8 定位方式描述
+                        switch (dataPackPosition.getPositioMode()) {
+                            case 0:
+                                // 无效数据
+                                dataPackPosition.setPositioModeDesc("无效数据");
+                                break;
+                            case 1:
+                                // 基站定位
+                                dataPackPosition.setPositioModeDesc("基站定位");
+                                break;
+                            case 2:
+                                // GPS定位
+                                dataPackPosition.setPositioModeDesc("GPS定位");
+                                break;
+                        }
+                        // --add
+                        dataPackTargetList.add(new DataPackTarget(dataPackPosition));
+                        // 判断报警类型信息
                         switch (alarmType){
                             case 0x01:
                                 System.out.println("## 新故障码报警: ");
@@ -490,7 +543,7 @@ public class DataParserLandu implements IDataParser {
                                         //故障码描述
                                         String desc = DataTool.readStringZero(buffer);
 
-                                        dataAlarm = new DataPackAlarm.Alarm("故障码");
+                                        dataAlarm = new DataPackAlarm.Alarm("新故障码报警");
                                         dataAlarm.setAlarmCode(code);
                                         dataAlarm.setAlarmValue(value);
                                         dataAlarm.setAlarmDesc(desc);
@@ -506,14 +559,22 @@ public class DataParserLandu implements IDataParser {
                                 break;
                             case 0x02:
                                 System.out.println("## 碰撞报警/异常震动报警: ");
+                                dataAlarmList = new ArrayList<>();
+                                dataAlarm = new DataPackAlarm.Alarm("碰撞报警");
+                                dataAlarm.setAlarmCode(String.valueOf(alarmType));
+                                //dataAlarm.setAlarmValue();
+                                dataAlarmList.add(dataAlarm);
+                                //添加分发数据
+                                dataPackAlarm = new DataPackAlarm(dataPackObject);
+                                dataPackAlarm.setAlarmList(dataAlarmList);
+                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0x03:
-                                System.out.println("## 水温报警: ");
+                                System.out.println("## 防盗报警: ");
                                 dataAlarmList = new ArrayList<>();
-                                //实际水温数值
-                                String waterTemperature = DataTool.readStringZero(buffer);
-                                dataAlarm = new DataPackAlarm.Alarm("水温报警");
-                                dataAlarm.setAlarmValue(waterTemperature);
+                                dataAlarm = new DataPackAlarm.Alarm("防盗报警");
+                                dataAlarm.setAlarmCode(String.valueOf(alarmType));
+                                //dataAlarm.setAlarmValue();
                                 dataAlarmList.add(dataAlarm);
                                 //添加分发数据
                                 dataPackAlarm = new DataPackAlarm(dataPackObject);
@@ -521,12 +582,13 @@ public class DataParserLandu implements IDataParser {
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0x04:
-                                System.out.println("## 充电电压报警: ");
+                                System.out.println("## 水温报警: ");
                                 dataAlarmList = new ArrayList<>();
-                                //充电电压值
-                                String chargingVoltage = DataTool.readStringZero(buffer);
-                                dataAlarm = new DataPackAlarm.Alarm("充电电压报警");
-                                dataAlarm.setAlarmValue(chargingVoltage);
+                                //实际水温数值
+                                String waterTemperature = DataTool.readStringZero(buffer);
+                                dataAlarm = new DataPackAlarm.Alarm("水温报警");
+                                dataAlarm.setAlarmCode(String.valueOf(alarmType));
+                                dataAlarm.setAlarmValue(waterTemperature);
                                 dataAlarmList.add(dataAlarm);
                                 //添加分发数据
                                 dataPackAlarm = new DataPackAlarm(dataPackObject);
@@ -534,11 +596,27 @@ public class DataParserLandu implements IDataParser {
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0x05:
+                                System.out.println("## 充电电压报警: ");
+                                dataAlarmList = new ArrayList<>();
+                                //充电电压值
+                                String chargingVoltage = DataTool.readStringZero(buffer);
+                                dataAlarm = new DataPackAlarm.Alarm("充电电压报警");
+                                dataAlarm.setAlarmCode(String.valueOf(alarmType));
+                                dataAlarm.setAlarmValue(chargingVoltage);
+                                dataAlarm.setAlarmDesc("小于 13.1 伏");
+                                dataAlarmList.add(dataAlarm);
+                                //添加分发数据
+                                dataPackAlarm = new DataPackAlarm(dataPackObject);
+                                dataPackAlarm.setAlarmList(dataAlarmList);
+                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
+                                break;
+                            case 0xF0:
                                 System.out.println("## 拔下OBD报警: ");
                                 dataAlarmList = new ArrayList<>();
                                 //设备拔下时间戳
                                 String pullOutTime = DataTool.readStringZero(buffer);
                                 dataAlarm = new DataPackAlarm.Alarm("拔下OBD报警");
+                                dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 dataAlarm.setAlarmValue(pullOutTime);
                                 dataAlarmList.add(dataAlarm);
                                 //添加分发数据
@@ -546,6 +624,17 @@ public class DataParserLandu implements IDataParser {
                                 dataPackAlarm.setAlarmList(dataAlarmList);
                                 dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
+                            default:
+                                System.out.println("## 其他报警: ");
+                                dataAlarmList = new ArrayList<>();
+                                dataAlarm = new DataPackAlarm.Alarm("其他报警");
+                                dataAlarm.setAlarmCode(String.valueOf(alarmType));
+                                //dataAlarm.setAlarmValue();
+                                dataAlarmList.add(dataAlarm);
+                                //添加分发数据
+                                dataPackAlarm = new DataPackAlarm(dataPackObject);
+                                dataPackAlarm.setAlarmList(dataAlarmList);
+                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                         }
 
                         break;
@@ -594,27 +683,36 @@ public class DataParserLandu implements IDataParser {
                         for(int i = 0;i < count;i ++){
                             //定位信息
                             dataPackPosition = new DataPackPosition(dataPackObject);
-                            String[] positions = DataTool.readStringZero(buffer).split(",");
-                            //经度
-                            String lngStr = positions[0];
-                            Double lng = 0d;
-                            if(lngStr != null && !"-".equals(lngStr)){
-                                lng = Double.parseDouble(lngStr);
-                            }
-                            dataPackPosition.setLongitude(lng);
-                            //纬度
-                            String latStr = positions[1];
-                            Double lat = 0d;
-                            if(latStr != null && !"-".equals(latStr)){
-                                lat = Double.parseDouble(latStr);
-                            }
-                            dataPackPosition.setLatitude(lat);
-                            //方向
-                            dataPackPosition.setDirection(positions[2]);
-                            //定位时间
+                            //定位信息-车速(km/h)
+                            dataPackPosition.setSpeed(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                            //定位信息-当前行程行驶距离(m)
+                            dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
+                            positions = LanduDataPackUtil.splitPositionString(buffer);
+                            //定位信息-经度
+                            dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
+                            //定位信息-纬度
+                            dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
+                            //定位信息-方向
+                            dataPackPosition.setDirection(Float.parseFloat(positions[2]));
+                            //定位信息-定位时间
                             dataPackPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
-                            //定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                            //定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
                             dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
+                            //定位信息-定位方式描述
+                            switch (dataPackPosition.getPositioMode()) {
+                                case 0:
+                                    // 无效数据
+                                    dataPackPosition.setPositioModeDesc("无效数据");
+                                    break;
+                                case 1:
+                                    // 基站定位
+                                    dataPackPosition.setPositioModeDesc("基站定位");
+                                    break;
+                                case 2:
+                                    // GPS定位
+                                    dataPackPosition.setPositioModeDesc("GPS定位");
+                                    break;
+                            }
 
                             //添加分发数据
                             dataPackTargetList.add(new DataPackTarget(dataPackPosition));
@@ -760,31 +858,38 @@ public class DataParserLandu implements IDataParser {
                                 System.out.println("## 急减速记录");
                             case 0x04:
                                 System.out.println("## 急转弯记录");
-                                //定位信息
+                                // 定位信息
                                 dataPackPosition = new DataPackPosition(dataPackObject);
-                                String[] positions = DataTool.readStringZero(buffer).split(",");
-                                //经度
-                                String lngStr = positions[0];
-                                Double lng = 0d;
-                                if(lngStr != null && !"-".equals(lngStr)){
-                                    lng = Double.parseDouble(lngStr);
-                                }
-                                dataPackPosition.setLongitude(lng);
-                                //纬度
-                                String latStr = positions[1];
-                                Double lat = 0d;
-                                if(latStr != null && !"-".equals(latStr)){
-                                    lat = Double.parseDouble(latStr);
-                                }
-                                dataPackPosition.setLatitude(lat);
-                                //方向
-                                dataPackPosition.setDirection(positions[2]);
-                                //定位时间
+                                // 定位信息-车速(km/h)
+                                dataPackPosition.setSpeed(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                                // 定位信息-当前行程行驶距离(m)
+                                dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
+                                positions = LanduDataPackUtil.splitPositionString(buffer);
+                                // 定位信息-经度
+                                dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
+                                // 定位信息-纬度
+                                dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
+                                // 定位信息-方向
+                                dataPackPosition.setDirection(Float.parseFloat(positions[2]));
+                                // 定位信息-定位时间
                                 dataPackPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
-                                //定位方式：0-无效数据，1-基站定位，2-GPS 定位
+                                // 定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
                                 dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
-                                //添加分发数据
-                                dataPackTargetList.add(new DataPackTarget(dataPackPosition));
+                                // 定位信息-定位方式描述
+                                switch (dataPackPosition.getPositioMode()) {
+                                    case 0:
+                                        // 无效数据
+                                        dataPackPosition.setPositioModeDesc("无效数据");
+                                        break;
+                                    case 1:
+                                        // 基站定位
+                                        dataPackPosition.setPositioModeDesc("基站定位");
+                                        break;
+                                    case 2:
+                                        // GPS定位
+                                        dataPackPosition.setPositioModeDesc("GPS定位");
+                                        break;
+                                }
                                 break;
                             case 0x05:
                                 System.out.println("## 无效");

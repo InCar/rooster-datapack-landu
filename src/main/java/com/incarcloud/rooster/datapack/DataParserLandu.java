@@ -302,18 +302,18 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setDetectionDate(LanduDataPackUtil.readDate(buffer));
 
                         // 6.车辆状态
-                        switch (LanduDataPackUtil.readByte(buffer)) {
+                        int carStatus = LanduDataPackUtil.readByte(buffer);
+                        switch (carStatus) {
                             case 0x01:
                                 // 0x01-发动机点火时
                                 System.out.println("## 发动机点火时");
                                 // 6.1 整车数据
                                 dataPackOverview = new DataPackOverview(dataPackObject);
                                 // 6.1.1 车辆状态
-                                dataPackOverview.setStatus(0x01);
+                                dataPackOverview.setCarStatus(carStatus);
                                 // 6.1.2 启动电压(V)
                                 dataPackOverview.setVoltage(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
-                                // --add
-                                dataPackTargetList.add(new DataPackTarget(dataPackOverview));
+
                                 // 6.2 定位信息
                                 dataPackPosition = new DataPackPosition(dataPackObject);
                                 // 6.2.1 车速(km/h)
@@ -348,6 +348,11 @@ public class DataParserLandu implements IDataParser {
                                 }
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackPosition));
+
+                                // --add
+                                // 6.1.3 定位信息
+                                dataPackOverview.setPosition(dataPackPosition);
+                                dataPackTargetList.add(new DataPackTarget(dataPackOverview));
                                 break;
                             case 0x02:
                                 // 0x02-发动机运行中
@@ -385,66 +390,69 @@ public class DataParserLandu implements IDataParser {
                             case 0x03:
                                 // 0x03-发动机熄火时
                                 System.out.println("## 发动机熄火时");
+                                // 整车数据
                                 dataPackOverview = new DataPackOverview(dataPackObject);
-                                dataPackOverview.setStatus(0x03);
-                                //本行程数据小计
-                                //本次发动机运行时间
-                                dataPackOverview.setEngineRunningTime(buffer.readUnsignedShort());
-                                //本次行驶距离
-                                dataPackOverview.setTravelDistance(buffer.readInt());
+                                dataPackOverview.setCarStatus(carStatus);
+                                // 1.本行程数据小计
+                                // 1.1 本次发动机运行时间
+                                dataPackOverview.setRunTime(buffer.readUnsignedShort());
+                                // 1.2 本次行驶距离
+                                dataPackOverview.setCurrentMileage(buffer.readInt());
                                 Integer averageFuelConsumption = buffer.readUnsignedShort();
-                                //本次平均油耗
-                                dataPackOverview.setAverageFuelConsumption(averageFuelConsumption.floatValue()/100f);
+                                // 1.3 本次平均油耗
+                                dataPackOverview.setCurrentAvgOilUsed(averageFuelConsumption.floatValue()/100F);
                                 //累计行驶里程
-                                dataPackOverview.setTotalTravelDistance(buffer.readInt());
+                                dataPackOverview.setMileage(buffer.readInt());
                                 Integer totalAverageFuelConsumption = buffer.readUnsignedShort();
-                                //累计平均油耗
-                                dataPackOverview.setTotalAverageFuelConsumption(totalAverageFuelConsumption.floatValue()/100f);
-                                //车速分组统计
+                                // 1.4 累计平均油耗
+                                dataPackOverview.setAvgOilUsed(totalAverageFuelConsumption.floatValue()/100F);
+                                // 1.5 车速分组统计
                                 count = buffer.readUnsignedByte();
-                                Integer[] speeds = new Integer[count];
-                                Integer[] times = new Integer[count];
-                                Integer[] gaps = new Integer[count];
-                                for(int i = 0;i < count;i++){
-                                    speeds[i] = (int) buffer.readUnsignedByte();
-                                    times[i]= buffer.readUnsignedShort();
-                                    gaps[i] = buffer.readInt();
+                                if(0 < count) {
+                                    int speed, consumeTime, travelDistance;
+                                    List<DataPackOverview.Speed> speedList = new ArrayList<>();
+                                    for(int i = 0;i < count;i++){
+                                        // 1.5.1 设置速度值
+                                        speed = (int) buffer.readUnsignedByte();
+                                        // 1.5.2 时间小计(秒)
+                                        consumeTime = buffer.readUnsignedShort();
+                                        // 1.5.3 距离小计(米)
+                                        travelDistance = buffer.readInt();
+
+                                        speedList.add(new DataPackOverview.Speed(speed, consumeTime, travelDistance));
+                                    }
+                                    dataPackOverview.setSpeedGroup(speedList);
                                 }
-                                //设置速度值
-                                dataPackOverview.setSpeedSet(speeds);
-                                //时间小计
-                                dataPackOverview.setSubTotalTime(times);
-                                //距离小计
-                                dataPackOverview.setSubTotalDistance(gaps);
-                                //驾驶习惯统计
-                                //本次急加速次数
-                                dataPackOverview.setSuddenUp(buffer.readUnsignedShort());
-                                //本次急减速次数
-                                dataPackOverview.setSuddenDec(buffer.readUnsignedShort());
-                                //本次急转向次数
-                                dataPackOverview.setSuddenTurn(buffer.readUnsignedShort());
-                                //本次时速超速时间
+                                // 2.驾驶习惯统计
+                                // 2.1 本次急加速次数
+                                dataPackOverview.setSpeedUpTimes(buffer.readUnsignedShort());
+                                // 2.2 本次急减速次数
+                                dataPackOverview.setSpeedDownTimes(buffer.readUnsignedShort());
+                                // 2.3 本次急转向次数
+                                dataPackOverview.setSharpTurnTimes(buffer.readUnsignedShort());
+                                // 2.4 本次时速超速时间
                                 dataPackOverview.setSpeedingTime(buffer.readInt());
-                                //最高车速
+                                // 2.5 最高车速
                                 dataPackOverview.setMaxSpeed((int) buffer.readUnsignedByte());
-                                //定位信息
+
+                                // 3.定位信息
                                 dataPackPosition = new DataPackPosition(dataPackObject);
-                                //定位信息-车速(km/h)
+                                // 3.1 定位信息-车速(km/h)
                                 dataPackPosition.setSpeed(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
-                                //定位信息-当前行程行驶距离(m)
+                                // 3.2 定位信息-当前行程行驶距离(m)
                                 dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
                                 positions = LanduDataPackUtil.splitPositionString(buffer);
-                                //定位信息-经度
+                                // 3.3 定位信息-经度
                                 dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
-                                //定位信息-纬度
+                                // 3.4 定位信息-纬度
                                 dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
-                                //定位信息-方向
+                                // 3.5 定位信息-方向
                                 dataPackPosition.setDirection(Float.parseFloat(positions[2]));
-                                //定位信息-定位时间
+                                // 3.6 定位信息-定位时间
                                 dataPackPosition.setPositionDate(LanduDataPackUtil.formatDateString(positions[3]));
-                                //定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
+                                // 3.7 定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
                                 dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
-                                //定位信息-定位方式描述
+                                // 3.8 定位信息-定位方式描述
                                 switch (dataPackPosition.getPositioMode()) {
                                     case 0:
                                         // 无效数据
@@ -461,12 +469,18 @@ public class DataParserLandu implements IDataParser {
                                 }
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackPosition));
+
+                                // --add
+                                // 2.6 定位信息
+                                dataPackOverview.setPosition(dataPackPosition);
+                                dataPackTargetList.add(new DataPackTarget(dataPackOverview));
                                 break;
                             case 0x04:
                                 // 0x04-发动机熄火后
                                 System.out.println("## 发动机熄火后");
+                                // 整车数据
                                 dataPackOverview = new DataPackOverview(dataPackObject);
-                                dataPackOverview.setStatus(0x04);
+                                dataPackOverview.setCarStatus(carStatus);
                                 //蓄电池电压值
                                 dataPackOverview.setVoltage(Float.parseFloat(DataTool.readStringZero(buffer)));
                                 // --add
@@ -475,6 +489,7 @@ public class DataParserLandu implements IDataParser {
                             case 0x05:
                                 // 0x05-车辆不能检测
                                 System.out.println("## 车辆不能检测");
+                                // 无数据上传
                                 break;
                         }
                         break;
@@ -526,15 +541,17 @@ public class DataParserLandu implements IDataParser {
                         }
                         // --add
                         dataPackTargetList.add(new DataPackTarget(dataPackPosition));
-                        // 判断报警类型信息
+
+                        // 8.报警数据
+                        dataAlarmList = new ArrayList<>();
+                        dataPackAlarm = new DataPackAlarm(dataPackObject);
+                        // 8.1 判断报警类型信息
                         switch (alarmType){
                             case 0x01:
                                 System.out.println("## 新故障码报警: ");
                                 //故障码个数
                                 int count = buffer.readUnsignedByte();
                                 if(0 < count) {
-                                    dataAlarmList = new ArrayList<>();
-
                                     for(int i = 0;i < count;i ++){
                                         //故障码
                                         String code = DataTool.readStringZero(buffer);
@@ -550,93 +567,67 @@ public class DataParserLandu implements IDataParser {
 
                                         dataAlarmList.add(dataAlarm);
                                     }
-
-                                    //添加分发数据
-                                    dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                    dataPackAlarm.setAlarmList(dataAlarmList);
-                                    dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 }
                                 break;
                             case 0x02:
                                 System.out.println("## 碰撞报警/异常震动报警: ");
-                                dataAlarmList = new ArrayList<>();
                                 dataAlarm = new DataPackAlarm.Alarm("碰撞报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 //dataAlarm.setAlarmValue();
+
                                 dataAlarmList.add(dataAlarm);
-                                //添加分发数据
-                                dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmList(dataAlarmList);
-                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0x03:
                                 System.out.println("## 防盗报警: ");
-                                dataAlarmList = new ArrayList<>();
                                 dataAlarm = new DataPackAlarm.Alarm("防盗报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 //dataAlarm.setAlarmValue();
+
                                 dataAlarmList.add(dataAlarm);
-                                //添加分发数据
-                                dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmList(dataAlarmList);
-                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0x04:
                                 System.out.println("## 水温报警: ");
-                                dataAlarmList = new ArrayList<>();
                                 //实际水温数值
                                 String waterTemperature = DataTool.readStringZero(buffer);
                                 dataAlarm = new DataPackAlarm.Alarm("水温报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 dataAlarm.setAlarmValue(waterTemperature);
+
                                 dataAlarmList.add(dataAlarm);
-                                //添加分发数据
-                                dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmList(dataAlarmList);
-                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0x05:
                                 System.out.println("## 充电电压报警: ");
-                                dataAlarmList = new ArrayList<>();
                                 //充电电压值
                                 String chargingVoltage = DataTool.readStringZero(buffer);
                                 dataAlarm = new DataPackAlarm.Alarm("充电电压报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 dataAlarm.setAlarmValue(chargingVoltage);
                                 dataAlarm.setAlarmDesc("小于 13.1 伏");
+
                                 dataAlarmList.add(dataAlarm);
-                                //添加分发数据
-                                dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmList(dataAlarmList);
-                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             case 0xF0:
                                 System.out.println("## 拔下OBD报警: ");
-                                dataAlarmList = new ArrayList<>();
                                 //设备拔下时间戳
                                 String pullOutTime = DataTool.readStringZero(buffer);
                                 dataAlarm = new DataPackAlarm.Alarm("拔下OBD报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 dataAlarm.setAlarmValue(pullOutTime);
+
                                 dataAlarmList.add(dataAlarm);
-                                //添加分发数据
-                                dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmList(dataAlarmList);
-                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                                 break;
                             default:
                                 System.out.println("## 其他报警: ");
-                                dataAlarmList = new ArrayList<>();
                                 dataAlarm = new DataPackAlarm.Alarm("其他报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 //dataAlarm.setAlarmValue();
-                                dataAlarmList.add(dataAlarm);
-                                //添加分发数据
-                                dataPackAlarm = new DataPackAlarm(dataPackObject);
-                                dataPackAlarm.setAlarmList(dataAlarmList);
-                                dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
-                        }
 
+                                dataAlarmList.add(dataAlarm);
+                        }
+                        // 8.2 添加分发数据
+                        dataPackAlarm.setAlarmList(dataAlarmList);
+                        dataPackAlarm.setPosition(dataPackPosition);
+                        dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                         break;
                     case 0x1603:
                         System.out.println("## 0x1603 - 3.1.3 从服务器取得参数");

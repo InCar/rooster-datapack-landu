@@ -110,10 +110,17 @@ public class DataParserLanduTest {
     }
 
     @Test
-    public void testCreateResponse() {
+    public void testResponseBytes() {
         IDataParser parser = new DataParserLandu();
         ByteBuf responseBuf = parser.createResponse(parser.extract(buffer).get(0), ERespReason.OK);
         Assert.assertEquals("AA55000BFFF40005160100021A", DatatypeConverter.printHexBinary(ByteBufUtil.getBytes(responseBuf, 0, responseBuf.readableBytes())));
+    }
+
+    @Test
+    public void testResponseBytes2() {
+        IDataParser parser = new DataParserLandu();
+        ByteBuf responseBuf = parser.createResponse(parser.extract(buffer).get(2), ERespReason.OK);
+        System.out.println(DatatypeConverter.printHexBinary(ByteBufUtil.getBytes(responseBuf, 0, responseBuf.readableBytes())));
     }
 
     @Test

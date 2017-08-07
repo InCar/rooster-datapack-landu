@@ -186,31 +186,46 @@ public class DataParserLandu implements IDataParser {
     private byte[] responseBytes(byte[] bytes, byte errorCode) {
         byte[] returnBytes = null;
         if(validate(bytes)) {
-            returnBytes = new byte[13];
-            // 1.数据包标志
-            returnBytes[0] = bytes[0];
-            returnBytes[1] = bytes[1];
-            // 2.数据包长度(固定长度13-2=11)
-            returnBytes[2] = 0x00;
-            returnBytes[3] = (byte) (13-2);
-            // 3.数据包长度校验
-            returnBytes[4] = (byte) ~returnBytes[2];
-            returnBytes[5] = (byte) ~returnBytes[3];
-            // 4.数据包ID
-            returnBytes[6] = bytes[6];
-            // 5.协议格式版本
-            returnBytes[7] = bytes[7];
-            // 6.数据内容(命令字)
-            returnBytes[8] = bytes[8];
-            returnBytes[9] = bytes[9];
-            returnBytes[10] = errorCode; // 0x00-成功
-            // 7.校验和
-            int sum = 0;
-            for (int i = 2; i < returnBytes.length - 2; i++) {
-                sum += (returnBytes[i] & 0xFF);
+            if(0x16 == bytes[8] && 0x03 == bytes[9]) {
+                // 命令字：0x1603
+                AcceptServerParameterResp resp = new AcceptServerParameterResp();
+                resp.setActionParameterNum(0);
+                resp.setNetworkConfigNum(0);
+                resp.setSegmentNum(0);
+                resp.setLocationParameterNum(0);
+                resp.setWarnNum(0);
+                resp.setMisFireDataNum(0);
+                resp.setDataIDNum(0);
+                resp.setUpdateID("V0.00.00");
+                returnBytes = resp.encoded(resp, bytes[7]);
+            } else {
+                // 命令字：非0x1603
+                returnBytes = new byte[13];
+                // 1.数据包标志
+                returnBytes[0] = bytes[0];
+                returnBytes[1] = bytes[1];
+                // 2.数据包长度(固定长度13-2=11)
+                returnBytes[2] = 0x00;
+                returnBytes[3] = (byte) (13-2);
+                // 3.数据包长度校验
+                returnBytes[4] = (byte) ~returnBytes[2];
+                returnBytes[5] = (byte) ~returnBytes[3];
+                // 4.数据包ID
+                returnBytes[6] = bytes[6];
+                // 5.协议格式版本
+                returnBytes[7] = bytes[7];
+                // 6.数据内容(命令字)
+                returnBytes[8] = bytes[8];
+                returnBytes[9] = bytes[9];
+                returnBytes[10] = errorCode; // 0x00-成功
+                // 7.校验和
+                int sum = 0;
+                for (int i = 2; i < returnBytes.length - 2; i++) {
+                    sum += (returnBytes[i] & 0xFF);
+                }
+                returnBytes[11] = (byte) ((sum >> 8) & 0xFF);
+                returnBytes[12] = (byte) (sum & 0xFF);
             }
-            returnBytes[11] = (byte) ((sum >> 8) & 0xFF);
-            returnBytes[12] = (byte) (sum & 0xFF);
         }
         return returnBytes;
     }

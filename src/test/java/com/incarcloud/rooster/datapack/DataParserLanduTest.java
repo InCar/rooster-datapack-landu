@@ -109,7 +109,7 @@ public class DataParserLanduTest {
     public void testExtract() throws Exception {
         IDataParser parser = new DataParserLandu();
         List<DataPack> dataPackList = parser.extract(buffer);
-        Assert.assertEquals(7, dataPackList.size());
+        Assert.assertEquals(8, dataPackList.size());
 
         for(DataPack dataPack: dataPackList) {
             dataPack.freeBuf();

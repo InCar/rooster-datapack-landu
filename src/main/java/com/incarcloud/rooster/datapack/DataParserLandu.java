@@ -820,51 +820,78 @@ public class DataParserLandu implements IDataParser {
 
                         //数据类型
                         int dataType = buffer.readUnsignedByte();
+                        String behaviorName = null;
+                        String behaviorDesc = null;
                         switch (dataType){
                             case 0x01:
                                 System.out.println("## 超速记录");
+                                behaviorName = "超速";
+                                behaviorDesc = "超速记录";
+                                break;
                             case 0x02:
                                 System.out.println("## 急加速记录");
+                                behaviorName = "急加速";
+                                behaviorDesc = "急加速记录";
+                                break;
                             case 0x03:
                                 System.out.println("## 急减速记录");
+                                behaviorName = "急减速";
+                                behaviorDesc = "急减速记录";
+                                break;
                             case 0x04:
                                 System.out.println("## 急转弯记录");
-                                // 定位信息
-                                dataPackPosition = new DataPackPosition(dataPackObject);
-                                // 定位信息-车速(km/h)
-                                dataPackPosition.setSpeed(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                                // 定位信息-当前行程行驶距离(m)
-                                dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                                positions = LanduDataPackUtil.splitPositionString(buffer);
-                                // 定位信息-经度
-                                dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
-                                // 定位信息-纬度
-                                dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
-                                // 定位信息-方向
-                                dataPackPosition.setDirection(Float.parseFloat(positions[2]));
-                                // 定位信息-定位时间
-                                dataPackPosition.setPositionTime(LanduDataPackUtil.formatDateString(positions[3]));
-                                // 定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
-                                dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
-                                // 定位信息-定位方式描述
-                                switch (dataPackPosition.getPositioMode()) {
-                                    case 0:
-                                        // 无效数据
-                                        dataPackPosition.setPositioModeDesc("无效数据");
-                                        break;
-                                    case 1:
-                                        // 基站定位
-                                        dataPackPosition.setPositioModeDesc("基站定位");
-                                        break;
-                                    case 2:
-                                        // GPS定位
-                                        dataPackPosition.setPositioModeDesc("GPS定位");
-                                        break;
-                                }
+                                behaviorName = "急转弯";
+                                behaviorDesc = "急转弯记录";
                                 break;
                             case 0x05:
                                 System.out.println("## 无效");
                                 break;
+                        }
+                        //行为位置数据
+                        if(0 < dataType && 5 > dataType){
+                            // 定位信息
+                            dataPackPosition = new DataPackPosition(dataPackObject);
+                            // 定位信息-车速(km/h)
+                            dataPackPosition.setSpeed(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
+                            // 定位信息-当前行程行驶距离(m)
+                            dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
+                            positions = LanduDataPackUtil.splitPositionString(buffer);
+                            // 定位信息-经度
+                            dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
+                            // 定位信息-纬度
+                            dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
+                            // 定位信息-方向
+                            dataPackPosition.setDirection(Float.parseFloat(positions[2]));
+                            // 定位信息-定位时间
+                            dataPackPosition.setPositionTime(LanduDataPackUtil.formatDateString(positions[3]));
+                            // 定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
+                            dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
+                            // 定位信息-定位方式描述
+                            switch (dataPackPosition.getPositioMode()) {
+                                case 0:
+                                    // 无效数据
+                                    dataPackPosition.setPositioModeDesc("无效数据");
+                                    break;
+                                case 1:
+                                    // 基站定位
+                                    dataPackPosition.setPositioModeDesc("基站定位");
+                                    break;
+                                case 2:
+                                    // GPS定位
+                                    dataPackPosition.setPositioModeDesc("GPS定位");
+                                    break;
+                            }
+                            //--add
+                            dataPackTargetList.add(new DataPackTarget(dataPackPosition));
+
+                            // 行为数据
+                            DataPackBehavior dataPackBehavior = new DataPackBehavior(dataPackObject);
+                            dataPackBehavior.setBehaviorId(dataType);
+                            dataPackBehavior.setBehaviorName(behaviorName);
+                            dataPackBehavior.setBehaviorDesc(behaviorDesc);
+                            dataPackBehavior.setPosition(dataPackPosition);
+                            //--add
+                            dataPackTargetList.add(new DataPackTarget(dataPackBehavior));
                         }
                         break;
                     case 0x1621:

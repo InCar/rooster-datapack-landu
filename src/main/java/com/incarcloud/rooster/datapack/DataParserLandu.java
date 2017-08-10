@@ -1,6 +1,5 @@
 package com.incarcloud.rooster.datapack;
 
-import com.incarcloud.rooster.util.DataTool;
 import com.incarcloud.rooster.util.LanduDataClassifyUtil;
 import com.incarcloud.rooster.util.LanduDataPackUtil;
 import com.incarcloud.rooster.util.LanduRespUtil;
@@ -346,7 +345,7 @@ public class DataParserLandu implements IDataParser {
                                         // 2.1 数据项id
                                         Integer id = buffer.readUnsignedShort();
                                         // 2.2 数据项内容
-                                        String content = DataTool.readStringZero(buffer);
+                                        String content = LanduDataPackUtil.readString(buffer);
 
                                         // 2.3 设置数值信息
                                         dataPeak = new DataPackPeak.Peak(id, content);
@@ -462,7 +461,7 @@ public class DataParserLandu implements IDataParser {
                                 dataPackOverview = new DataPackOverview(dataPackObject);
                                 dataPackOverview.setCarStatus(carStatus);
                                 //蓄电池电压值
-                                dataPackOverview.setVoltage(Float.parseFloat(DataTool.readStringZero(buffer)));
+                                dataPackOverview.setVoltage(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackOverview));
                                 break;
@@ -476,13 +475,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x1602:
                         System.out.println("## 0x1602 - 3.1.2 上传车辆报警");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
                         // 6.报警类型
@@ -534,11 +533,11 @@ public class DataParserLandu implements IDataParser {
                                 if(0 < count) {
                                     for(int i = 0;i < count;i ++){
                                         //故障码
-                                        String code = DataTool.readStringZero(buffer);
+                                        String code = LanduDataPackUtil.readString(buffer);
                                         //故障码属性
-                                        String value = DataTool.readStringZero(buffer);
+                                        String value = LanduDataPackUtil.readString(buffer);
                                         //故障码描述
-                                        String desc = DataTool.readStringZero(buffer);
+                                        String desc = LanduDataPackUtil.readString(buffer);
 
                                         dataAlarm = new DataPackAlarm.Alarm("新故障码报警");
                                         dataAlarm.setAlarmCode(code);
@@ -568,7 +567,7 @@ public class DataParserLandu implements IDataParser {
                             case 0x04:
                                 System.out.println("## 水温报警: ");
                                 //实际水温数值
-                                String waterTemperature = DataTool.readStringZero(buffer);
+                                String waterTemperature = LanduDataPackUtil.readString(buffer);
                                 dataAlarm = new DataPackAlarm.Alarm("水温报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 dataAlarm.setAlarmValue(waterTemperature);
@@ -578,7 +577,7 @@ public class DataParserLandu implements IDataParser {
                             case 0x05:
                                 System.out.println("## 充电电压报警: ");
                                 //充电电压值
-                                String chargingVoltage = DataTool.readStringZero(buffer);
+                                String chargingVoltage = LanduDataPackUtil.readString(buffer);
                                 dataAlarm = new DataPackAlarm.Alarm("充电电压报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 dataAlarm.setAlarmValue(chargingVoltage);
@@ -589,7 +588,7 @@ public class DataParserLandu implements IDataParser {
                             case 0xF0:
                                 System.out.println("## 拔下OBD报警: ");
                                 //设备拔下时间戳
-                                String pullOutTime = DataTool.readStringZero(buffer);
+                                String pullOutTime = LanduDataPackUtil.readString(buffer);
                                 dataAlarm = new DataPackAlarm.Alarm("拔下OBD报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
                                 dataAlarm.setAlarmValue(pullOutTime);
@@ -612,21 +611,21 @@ public class DataParserLandu implements IDataParser {
                     case 0x1603:
                         System.out.println("## 0x1603 - 3.1.3 从服务器取得参数");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
 
                         DataPackDevice dataPackDevice = new DataPackDevice(dataPackObject);
                         //硬件版本号
-                        dataPackDevice.setHardwareVersion(DataTool.readStringZero(buffer));
+                        dataPackDevice.setHardwareVersion(LanduDataPackUtil.readString(buffer));
                         //固件版本号
-                        dataPackDevice.setFirmwareVersion(DataTool.readStringZero(buffer));
+                        dataPackDevice.setFirmwareVersion(LanduDataPackUtil.readString(buffer));
                         //软件版本号
-                        dataPackDevice.setSoftwareVersion(DataTool.readStringZero(buffer));
+                        dataPackDevice.setSoftwareVersion(LanduDataPackUtil.readString(buffer));
                         //诊断程序类型
                         dataPackDevice.setDiagnoseProgramType((int) buffer.readUnsignedByte());
                         //恢复出厂设置序号
@@ -640,13 +639,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x1606:
                         System.out.println("## 0x1606 - 3.1.5 位置数据");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
 
                         //定位信息个数
                         int count = buffer.readUnsignedShort();
@@ -692,13 +691,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x1607:
                         System.out.println("## 0x1607 - 3.1.6 冻结帧数据");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
 
@@ -712,7 +711,7 @@ public class DataParserLandu implements IDataParser {
                                 //数据项id
                                 Integer id = buffer.readUnsignedShort();
                                 //数据项内容
-                                String content = DataTool.readStringZero(buffer);
+                                String content = LanduDataPackUtil.readString(buffer);
 
                                 // 设置数值信息
                                 dataPeak = new DataPackPeak.Peak(id, content);
@@ -736,13 +735,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x1608:
                         System.out.println("## 0x1608 - 3.1.7 怠速车况数据");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
 
@@ -754,11 +753,11 @@ public class DataParserLandu implements IDataParser {
                             //故障码列表
                             for(int i = 0;i < alarmCount;i ++){
                                 //故障码
-                                String code = DataTool.readStringZero(buffer);
+                                String code = LanduDataPackUtil.readString(buffer);
                                 //故障码属性
-                                String value = DataTool.readStringZero(buffer);
+                                String value = LanduDataPackUtil.readString(buffer);
                                 //故障码描述
-                                String desc = DataTool.readStringZero(buffer);
+                                String desc = LanduDataPackUtil.readString(buffer);
 
                                 dataAlarm = new DataPackAlarm.Alarm("故障码");
                                 dataAlarm.setAlarmCode(code);
@@ -784,7 +783,7 @@ public class DataParserLandu implements IDataParser {
                                 //数据项id
                                 Integer id = buffer.readUnsignedShort();
                                 //数据项内容
-                                String content = DataTool.readStringZero(buffer);
+                                String content = LanduDataPackUtil.readString(buffer);
 
                                 // 设置数值信息
                                 dataPeak = new DataPackPeak.Peak(id, content);
@@ -808,13 +807,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x160A:
                         System.out.println("## 0x160A - 3.1.9 行为位置数据");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
 
@@ -897,13 +896,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x1621:
                         System.out.println("## 0x1621 - 3.2.2 取得车辆当前检测数据");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         //故障等级
                         int alarmLevel = buffer.readUnsignedByte();
                         //故障码个数
@@ -914,11 +913,11 @@ public class DataParserLandu implements IDataParser {
                             //故障码列表
                             for(int i = 0;i < count;i ++){
                                 //故障码
-                                String code = DataTool.readStringZero(buffer);
+                                String code = LanduDataPackUtil.readString(buffer);
                                 //故障码属性
-                                String value = DataTool.readStringZero(buffer);
+                                String value = LanduDataPackUtil.readString(buffer);
                                 //故障码描述
-                                String desc = DataTool.readStringZero(buffer);
+                                String desc = LanduDataPackUtil.readString(buffer);
 
                                 dataAlarm = new DataPackAlarm.Alarm("故障码");
                                 dataAlarm.setAlarmCode(code);
@@ -939,13 +938,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x1623:
                         System.out.println("## 0x1623 - 3.2.4 车辆诊断参数设定");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         //项数
                         count = buffer.readUnsignedShort();
                         if(0 < count) {
@@ -956,7 +955,7 @@ public class DataParserLandu implements IDataParser {
                                 //数据项id
                                 Integer id = buffer.readUnsignedShort();
                                 //数据项内容
-                                String content = DataTool.readStringZero(buffer);
+                                String content = LanduDataPackUtil.readString(buffer);
 
                                 // 设置数值信息
                                 dataPeak = new DataPackPeak.Peak(id, content);
@@ -980,13 +979,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x1624:
                         System.out.println("## 0x1624 - 3.2.5 清空累计平均油耗");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         //错误代码
                         int resultCode = buffer.readUnsignedByte();
 
@@ -999,21 +998,21 @@ public class DataParserLandu implements IDataParser {
                     case 0x1625:
                         System.out.println("## 0x1625 - 3.2.6 取得系统版本信息");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
 
                         dataPackDevice = new DataPackDevice(dataPackObject);
                         //硬件版本号
-                        dataPackDevice.setHardwareVersion(DataTool.readStringZero(buffer));
+                        dataPackDevice.setHardwareVersion(LanduDataPackUtil.readString(buffer));
                         //固件版本号
-                        dataPackDevice.setFirmwareVersion(DataTool.readStringZero(buffer));
+                        dataPackDevice.setFirmwareVersion(LanduDataPackUtil.readString(buffer));
                         //软件版本号
-                        dataPackDevice.setSoftwareVersion(DataTool.readStringZero(buffer));
+                        dataPackDevice.setSoftwareVersion(LanduDataPackUtil.readString(buffer));
                         //软件类别ID
                         dataPackDevice.setSoftwareTypeId((int)buffer.readUnsignedByte());
                         //添加分发数据
@@ -1024,13 +1023,13 @@ public class DataParserLandu implements IDataParser {
                     case 0x16E0:
                         System.out.println("## 0x16E0 - 3.3.1 恢复出厂设置");
                         // 1.设备号
-                        dataPackObject.setDeviceId(DataTool.readStringZero(buffer));
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
-                        dataPackObject.setVid(DataTool.readStringZero(buffer));
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
-                        dataPackObject.setVin(DataTool.readStringZero(buffer));
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         //错误代码
                         resultCode = buffer.readUnsignedByte();
 
@@ -1084,18 +1083,23 @@ public class DataParserLandu implements IDataParser {
         // 跳过"命令字"
         LanduDataPackUtil.readBytes(buffer, 2);
 
-        // 1.设备号
-        metaDataMap.put("deviceId", DataTool.readStringZero(buffer));
+        try {
+            // 1.设备号
+            metaDataMap.put("deviceId", LanduDataPackUtil.readString(buffer));
 
-        // 2.TripID
-        //buffer.readUnsignedShort();
-        LanduDataPackUtil.readDWord(buffer);
+            // 2.TripID
+            //buffer.readUnsignedShort();
+            LanduDataPackUtil.readDWord(buffer);
 
-        // 3.VID
-        DataTool.readStringZero(buffer);
+            // 3.VID
+            LanduDataPackUtil.readString(buffer);
 
-        // 4.VIN
-        metaDataMap.put("vin", DataTool.readStringZero(buffer));
+            // 4.VIN
+            metaDataMap.put("vin", LanduDataPackUtil.readString(buffer));
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
 
         // 重置readerIndex为0
         buffer.resetReaderIndex();

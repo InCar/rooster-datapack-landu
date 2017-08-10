@@ -649,7 +649,7 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setVin(DataTool.readStringZero(buffer));
 
                         //定位信息个数
-                        int count = buffer.readUnsignedByte();
+                        int count = buffer.readUnsignedShort();
                         //定位信息列表
                         for(int i = 0;i < count;i ++){
                             //定位信息

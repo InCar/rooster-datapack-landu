@@ -18,6 +18,13 @@ public class DataParserLandu implements IDataParser {
 
     private static Logger _logger = LoggerFactory.getLogger(DataParserLandu.class);
 
+    /**
+     * 协议分组和名称
+     */
+    public static final String PROTOCOL_GROUP = "china";
+    public static final String PROTOCOL_NAME = "landu";
+    public static final String PROTOCOL_PREFIX = PROTOCOL_GROUP + "-" + PROTOCOL_NAME + "-";
+
     static {
         /**
          * 声明数据包版本与解析器类关系

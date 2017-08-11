@@ -13,8 +13,8 @@ import io.netty.buffer.ByteBuf;
 public class LanduCommandFacotry implements CommandFacotry {
 
     static {
-        CommandFacotryManager.registerCommandFacotry(DataParserLandu.PROTOCOL_PREFIX + "2.05", LanduCommandFacotry.class);
-        CommandFacotryManager.registerCommandFacotry(DataParserLandu.PROTOCOL_PREFIX + "3.08", LanduCommandFacotry.class);
+//        CommandFacotryManager.registerCommandFacotry(DataParserLandu.PROTOCOL_PREFIX + "2.05", LanduCommandFacotry.class);
+//        CommandFacotryManager.registerCommandFacotry(DataParserLandu.PROTOCOL_PREFIX + "3.08", LanduCommandFacotry.class);
     }
 
 

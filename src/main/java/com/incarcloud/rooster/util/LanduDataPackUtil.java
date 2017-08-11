@@ -1,5 +1,7 @@
 package com.incarcloud.rooster.util;
 
+import com.incarcloud.rooster.datapack.DataPackObject;
+import com.incarcloud.rooster.datapack.DataPackPosition;
 import io.netty.buffer.ByteBuf;
 
 import java.io.UnsupportedEncodingException;
@@ -151,6 +153,62 @@ public class LanduDataPackUtil extends DataPackUtil {
                 return 0.0 - Double.parseDouble(value);
         }
         return 0;
+    }
+
+    /**
+     * 读取位置数据
+     *
+     * @param buffer ByteBuf
+     * @param dataPackObject 基对象
+     * @return 位置数据对象
+     * @throws UnsupportedEncodingException
+     * @throws ParseException
+     */
+    public static DataPackPosition readPositionObject(ByteBuf buffer, DataPackObject dataPackObject) throws UnsupportedEncodingException, ParseException {
+        // buffer和dataPackObject不能为null
+        if(null == buffer) {
+            throw new IllegalArgumentException("buffer is null");
+        }
+        if(null == dataPackObject) {
+            throw new IllegalArgumentException("dataPackObject is null");
+        }
+
+        // 初始化位置数据对象
+        DataPackPosition dataPackPosition = new DataPackPosition(dataPackObject);
+
+        // 车速(km/h)
+        dataPackPosition.setSpeed(Integer.parseInt(readString(buffer)));
+        // 当前行程行驶距离(m)
+        dataPackPosition.setTravelDistance(Integer.parseInt(readString(buffer)));
+
+        // 位置数据格式：【经度】+【分割符】+【纬度】+【分割符】+【方向】+【分割符】+【定位时间】+【分割符】+【定位方式】
+        String[] positions = splitPositionString(buffer);
+        // 经度
+        dataPackPosition.setLongitude(parsePositionString(positions[0]));
+        // 纬度
+        dataPackPosition.setLatitude(parsePositionString(positions[1]));
+        // 方向
+        dataPackPosition.setDirection(Float.parseFloat(positions[2]));
+        // 定位时间
+        dataPackPosition.setPositionTime(formatDateString(positions[3]));
+        // 6.2.7 定位方式：0-无效数据，1-基站定位，2-GPS定位
+        dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
+        // 6.2.8 定位方式描述
+        switch (dataPackPosition.getPositioMode()) {
+            case 0:
+                // 无效数据
+                dataPackPosition.setPositioModeDesc("无效数据");
+                break;
+            case 1:
+                // 基站定位
+                dataPackPosition.setPositioModeDesc("基站定位");
+                break;
+            case 2:
+                // GPS定位
+                dataPackPosition.setPositioModeDesc("GPS定位");
+                break;
+        }
+        return dataPackPosition;
     }
 
     protected LanduDataPackUtil() {

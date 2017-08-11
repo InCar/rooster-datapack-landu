@@ -1,5 +1,7 @@
 package com.incarcloud.rooster.datapack;
 
+import com.incarcloud.rooster.util.DataTool;
+import com.incarcloud.rooster.util.LanduDataPackUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.slf4j.Logger;
@@ -238,6 +240,46 @@ public class DataParserLandu implements IDataParser {
 
     @Override
     public Map<String, Object> getMetaData(ByteBuf buffer) {
-        return null;
+        Map<String, Object> metaDataMap = new HashMap<>();
+
+        buffer.markReaderIndex();
+
+        // 跳过"标志+长度+校验+数据包ID"
+        LanduDataPackUtil.readBytes(buffer, 7);
+
+        // 0.协议版本
+        String version = null;
+        switch (LanduDataPackUtil.readByte(buffer)) {
+            case 0x02:
+                version = "2.05";
+                break;
+            case 0x05:
+                version = "3.08";
+                break;
+            default:
+                version = "unknown";
+        }
+        metaDataMap.put("protocol", PROTOCOL_PREFIX + version);
+
+        // 跳过"命令字"
+        LanduDataPackUtil.readBytes(buffer, 2);
+
+        // 1.设备号
+        metaDataMap.put("deviceId", DataTool.readStringZero(buffer));
+
+        // 2.TripID
+        //buffer.readUnsignedShort();
+        LanduDataPackUtil.readDWord(buffer);
+
+        // 3.VID
+        DataTool.readStringZero(buffer);
+
+        // 4.VIN
+        metaDataMap.put("vin", DataTool.readStringZero(buffer));
+
+        // 重置readerIndex为0
+        buffer.resetReaderIndex();
+
+        return metaDataMap;
     }
 }

@@ -255,7 +255,7 @@ public class DataParserLandu implements IDataParser {
                 // 协议格式名称
                 dataPackObject.setProtocolName(PROTOCOL_PREFIX + version);
 
-                int commandId = LanduDataPackUtil.readUInt2(buffer);
+                int commandId = LanduDataPackUtil.readWord(buffer);
                 // 命令字
                 switch (commandId) {
                     case 0x1601:
@@ -263,14 +263,12 @@ public class DataParserLandu implements IDataParser {
                         // 1.设备号
                         dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
                         // 2.TripID
-                        //dataTarget.setTripId(buffer.readUnsignedShort());
                         dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
                         // 3.VID
                         dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
                         dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
-                        //dataTarget.setDetectionDate(DataTool.readStringZero(buffer));
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
 
                         // 6.车辆状态
@@ -279,50 +277,20 @@ public class DataParserLandu implements IDataParser {
                             case 0x01:
                                 // 0x01-发动机点火时
                                 System.out.println("## 发动机点火时");
-                                // 6.1 整车数据
+                                // 1.整车数据
                                 dataPackOverview = new DataPackOverview(dataPackObject);
-                                // 6.1.1 车辆状态
+                                // 1.1 车辆状态
                                 dataPackOverview.setCarStatus(carStatus);
-                                // 6.1.2 启动电压(V)
-                                dataPackOverview.setVoltage(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                                // 1.2 启动电压(V)
+                                dataPackOverview.setVoltage(Float.valueOf(LanduDataPackUtil.readString(buffer)));
 
-                                // 6.2 定位信息
-                                dataPackPosition = new DataPackPosition(dataPackObject);
-                                // 6.2.1 车速(km/h)
-                                dataPackPosition.setSpeed(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                                // 6.2.2 当前行程行驶距离(m)
-                                dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                                String[] positions = LanduDataPackUtil.splitPositionString(buffer);
-                                // 6.2.3.经度
-                                dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
-                                // 6.2.4 纬度
-                                dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
-                                // 6.2.5 方向
-                                dataPackPosition.setDirection(Float.parseFloat(positions[2]));
-                                // 6.2.6 定位时间
-                                dataPackPosition.setPositionTime(LanduDataPackUtil.formatDateString(positions[3]));
-                                // 6.2.7 定位方式：0-无效数据，1-基站定位，2-GPS定位
-                                dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
-                                // 6.2.8 定位方式描述
-                                switch (dataPackPosition.getPositioMode()) {
-                                    case 0:
-                                        // 无效数据
-                                        dataPackPosition.setPositioModeDesc("无效数据");
-                                        break;
-                                    case 1:
-                                        // 基站定位
-                                        dataPackPosition.setPositioModeDesc("基站定位");
-                                        break;
-                                    case 2:
-                                        // GPS定位
-                                        dataPackPosition.setPositioModeDesc("GPS定位");
-                                        break;
-                                }
+                                // 2.定位数据
+                                dataPackPosition = LanduDataPackUtil.readPositionObject(buffer, dataPackObject);
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackPosition));
 
                                 // --add
-                                // 6.1.3 定位信息
+                                // 1.3 定位信息
                                 dataPackOverview.setPosition(dataPackPosition);
                                 dataPackTargetList.add(new DataPackTarget(dataPackOverview));
                                 break;
@@ -337,15 +305,17 @@ public class DataParserLandu implements IDataParser {
                                 dataPackTargetList.add(new DataPackTarget(dataPackOverview));
 
                                 // 2.极值数据个数
-                                int count = buffer.readUnsignedShort();
+                                int count = LanduDataPackUtil.readWord(buffer);
                                 if(0 < count) {
                                     dataPeakList = new ArrayList<>();
 
+                                    Integer id;
+                                    String content;
                                     for(int i = 0; i < count; i++){
                                         // 2.1 数据项id
-                                        Integer id = buffer.readUnsignedShort();
+                                        id = LanduDataPackUtil.readWord(buffer);
                                         // 2.2 数据项内容
-                                        String content = LanduDataPackUtil.readString(buffer);
+                                        content = LanduDataPackUtil.readString(buffer);
 
                                         // 2.3 设置数值信息
                                         dataPeak = new DataPackPeak.Peak(id, content);
@@ -363,6 +333,7 @@ public class DataParserLandu implements IDataParser {
                                     // 2.4 添加分发数据
                                     dataPackPeak = new DataPackPeak(dataPackObject);
                                     dataPackPeak.setPeakList(dataPeakList);
+                                    // --add
                                     dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                                 }
                                 break;
@@ -374,17 +345,17 @@ public class DataParserLandu implements IDataParser {
                                 dataPackOverview.setCarStatus(carStatus);
                                 // 1.本行程数据小计
                                 // 1.1 本次发动机运行时间
-                                dataPackOverview.setRunTime(buffer.readUnsignedShort());
+                                dataPackOverview.setRunTime(LanduDataPackUtil.readWord(buffer));
                                 // 1.2 本次行驶距离
-                                dataPackOverview.setCurrentMileage(buffer.readInt());
-                                Integer averageFuelConsumption = buffer.readUnsignedShort();
+                                dataPackOverview.setCurrentMileage(LanduDataPackUtil.readLong(buffer));
                                 // 1.3 本次平均油耗
-                                dataPackOverview.setCurrentAvgOilUsed(averageFuelConsumption.floatValue()/100F);
-                                //累计行驶里程
-                                dataPackOverview.setMileage(buffer.readInt());
-                                Integer totalAverageFuelConsumption = buffer.readUnsignedShort();
-                                // 1.4 累计平均油耗
-                                dataPackOverview.setAvgOilUsed(totalAverageFuelConsumption.floatValue()/100F);
+                                Integer averageFuelConsumption = LanduDataPackUtil.readWord(buffer);
+                                dataPackOverview.setCurrentAvgOilUsed(averageFuelConsumption/100F);
+                                // 1.4 累计行驶里程
+                                dataPackOverview.setMileage(LanduDataPackUtil.readLong(buffer));
+                                // 1.5 累计平均油耗
+                                Integer totalAverageFuelConsumption = LanduDataPackUtil.readWord(buffer);
+                                dataPackOverview.setAvgOilUsed(totalAverageFuelConsumption/100F);
                                 // 1.5 车速分组统计
                                 count = buffer.readUnsignedByte();
                                 if(0 < count) {
@@ -392,11 +363,11 @@ public class DataParserLandu implements IDataParser {
                                     List<DataPackOverview.Speed> speedList = new ArrayList<>();
                                     for(int i = 0;i < count;i++){
                                         // 1.5.1 设置速度值
-                                        speed = (int) buffer.readUnsignedByte();
+                                        speed = LanduDataPackUtil.readByte(buffer);
                                         // 1.5.2 时间小计(秒)
-                                        consumeTime = buffer.readUnsignedShort();
+                                        consumeTime = LanduDataPackUtil.readWord(buffer);
                                         // 1.5.3 距离小计(米)
-                                        travelDistance = buffer.readInt();
+                                        travelDistance = LanduDataPackUtil.readLong(buffer);
 
                                         speedList.add(new DataPackOverview.Speed(speed, consumeTime, travelDistance));
                                     }
@@ -404,48 +375,18 @@ public class DataParserLandu implements IDataParser {
                                 }
                                 // 2.驾驶习惯统计
                                 // 2.1 本次急加速次数
-                                dataPackOverview.setSpeedUpTimes(buffer.readUnsignedShort());
+                                dataPackOverview.setSpeedUpTimes(LanduDataPackUtil.readWord(buffer));
                                 // 2.2 本次急减速次数
-                                dataPackOverview.setSpeedDownTimes(buffer.readUnsignedShort());
+                                dataPackOverview.setSpeedDownTimes(LanduDataPackUtil.readWord(buffer));
                                 // 2.3 本次急转向次数
-                                dataPackOverview.setSharpTurnTimes(buffer.readUnsignedShort());
+                                dataPackOverview.setSharpTurnTimes(LanduDataPackUtil.readWord(buffer));
                                 // 2.4 本次时速超速时间
-                                dataPackOverview.setSpeedingTime(buffer.readInt());
+                                dataPackOverview.setSpeedingTime(LanduDataPackUtil.readLong(buffer));
                                 // 2.5 最高车速
-                                dataPackOverview.setMaxSpeed((int) buffer.readUnsignedByte());
+                                dataPackOverview.setMaxSpeed(LanduDataPackUtil.readByte(buffer));
 
-                                // 3.定位信息
-                                dataPackPosition = new DataPackPosition(dataPackObject);
-                                // 3.1 定位信息-车速(km/h)
-                                dataPackPosition.setSpeed(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                                // 3.2 定位信息-当前行程行驶距离(m)
-                                dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                                positions = LanduDataPackUtil.splitPositionString(buffer);
-                                // 3.3 定位信息-经度
-                                dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
-                                // 3.4 定位信息-纬度
-                                dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
-                                // 3.5 定位信息-方向
-                                dataPackPosition.setDirection(Float.parseFloat(positions[2]));
-                                // 3.6 定位信息-定位时间
-                                dataPackPosition.setPositionTime(LanduDataPackUtil.formatDateString(positions[3]));
-                                // 3.7 定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
-                                dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
-                                // 3.8 定位信息-定位方式描述
-                                switch (dataPackPosition.getPositioMode()) {
-                                    case 0:
-                                        // 无效数据
-                                        dataPackPosition.setPositioModeDesc("无效数据");
-                                        break;
-                                    case 1:
-                                        // 基站定位
-                                        dataPackPosition.setPositioModeDesc("基站定位");
-                                        break;
-                                    case 2:
-                                        // GPS定位
-                                        dataPackPosition.setPositioModeDesc("GPS定位");
-                                        break;
-                                }
+                                // 3.定位数据
+                                dataPackPosition = LanduDataPackUtil.readPositionObject(buffer, dataPackObject);
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackPosition));
 
@@ -461,7 +402,7 @@ public class DataParserLandu implements IDataParser {
                                 dataPackOverview = new DataPackOverview(dataPackObject);
                                 dataPackOverview.setCarStatus(carStatus);
                                 //蓄电池电压值
-                                dataPackOverview.setVoltage(Float.parseFloat(LanduDataPackUtil.readString(buffer)));
+                                dataPackOverview.setVoltage(Float.valueOf(LanduDataPackUtil.readString(buffer)));
                                 // --add
                                 dataPackTargetList.add(new DataPackTarget(dataPackOverview));
                                 break;
@@ -484,40 +425,12 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
                         // 5.检测数据时间
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
+
                         // 6.报警类型
-                        int alarmType = buffer.readUnsignedByte();
-                        // 7.定位信息
-                        dataPackPosition = new DataPackPosition(dataPackObject);
-                        // 7.1 车速(km/h)
-                        dataPackPosition.setSpeed(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                        // 7.2 当前行程行驶距离(m)
-                        dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                        String[] positions = LanduDataPackUtil.splitPositionString(buffer);
-                        // 7.3.经度
-                        dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
-                        // 7.4 纬度
-                        dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
-                        // 7.5 方向
-                        dataPackPosition.setDirection(Float.parseFloat(positions[2]));
-                        // 7.6 定位时间
-                        dataPackPosition.setPositionTime(LanduDataPackUtil.formatDateString(positions[3]));
-                        // 7.7 定位方式：0-无效数据，1-基站定位，2-GPS定位
-                        dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
-                        // 7.8 定位方式描述
-                        switch (dataPackPosition.getPositioMode()) {
-                            case 0:
-                                // 无效数据
-                                dataPackPosition.setPositioModeDesc("无效数据");
-                                break;
-                            case 1:
-                                // 基站定位
-                                dataPackPosition.setPositioModeDesc("基站定位");
-                                break;
-                            case 2:
-                                // GPS定位
-                                dataPackPosition.setPositioModeDesc("GPS定位");
-                                break;
-                        }
+                        int alarmType = LanduDataPackUtil.readByte(buffer);
+
+                        // 7.定位数据
+                        dataPackPosition = LanduDataPackUtil.readPositionObject(buffer, dataPackObject);
                         // --add
                         dataPackTargetList.add(new DataPackTarget(dataPackPosition));
 
@@ -529,15 +442,16 @@ public class DataParserLandu implements IDataParser {
                             case 0x01:
                                 System.out.println("## 新故障码报警: ");
                                 //故障码个数
-                                int count = buffer.readUnsignedByte();
+                                int count = LanduDataPackUtil.readByte(buffer);
                                 if(0 < count) {
+                                    String code, value, desc;
                                     for(int i = 0;i < count;i ++){
                                         //故障码
-                                        String code = LanduDataPackUtil.readString(buffer);
+                                        code = LanduDataPackUtil.readString(buffer);
                                         //故障码属性
-                                        String value = LanduDataPackUtil.readString(buffer);
+                                        value = LanduDataPackUtil.readString(buffer);
                                         //故障码描述
-                                        String desc = LanduDataPackUtil.readString(buffer);
+                                        desc = LanduDataPackUtil.readString(buffer);
 
                                         dataAlarm = new DataPackAlarm.Alarm("新故障码报警");
                                         dataAlarm.setAlarmCode(code);
@@ -552,7 +466,6 @@ public class DataParserLandu implements IDataParser {
                                 System.out.println("## 碰撞报警/异常震动报警: ");
                                 dataAlarm = new DataPackAlarm.Alarm("碰撞报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
-                                //dataAlarm.setAlarmValue();
 
                                 dataAlarmList.add(dataAlarm);
                                 break;
@@ -560,7 +473,6 @@ public class DataParserLandu implements IDataParser {
                                 System.out.println("## 防盗报警: ");
                                 dataAlarm = new DataPackAlarm.Alarm("防盗报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
-                                //dataAlarm.setAlarmValue();
 
                                 dataAlarmList.add(dataAlarm);
                                 break;
@@ -599,13 +511,13 @@ public class DataParserLandu implements IDataParser {
                                 System.out.println("## 其他报警: ");
                                 dataAlarm = new DataPackAlarm.Alarm("其他报警");
                                 dataAlarm.setAlarmCode(String.valueOf(alarmType));
-                                //dataAlarm.setAlarmValue();
 
                                 dataAlarmList.add(dataAlarm);
                         }
                         // 8.2 添加分发数据
                         dataPackAlarm.setAlarmList(dataAlarmList);
                         dataPackAlarm.setPosition(dataPackPosition);
+                        // --add
                         dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                         break;
                     case 0x1603:
@@ -619,18 +531,19 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
 
+                        // 5.上报设备信息
                         DataPackDevice dataPackDevice = new DataPackDevice(dataPackObject);
-                        //硬件版本号
+                        // 5.1 硬件版本号
                         dataPackDevice.setHardwareVersion(LanduDataPackUtil.readString(buffer));
-                        //固件版本号
+                        // 5.2 固件版本号
                         dataPackDevice.setFirmwareVersion(LanduDataPackUtil.readString(buffer));
-                        //软件版本号
+                        // 5.3 软件版本号
                         dataPackDevice.setSoftwareVersion(LanduDataPackUtil.readString(buffer));
-                        //诊断程序类型
-                        dataPackDevice.setDiagnoseProgramType((int) buffer.readUnsignedByte());
-                        //恢复出厂设置序号
-                        dataPackDevice.setInitCode((int) buffer.readUnsignedByte());
-                        //添加分发数据
+                        // 5.4 诊断程序类型
+                        dataPackDevice.setDiagnoseProgramType(LanduDataPackUtil.readByte(buffer));
+                        // 5.5 恢复出厂设置序号
+                        dataPackDevice.setInitCode(LanduDataPackUtil.readByte(buffer));
+                        // --add
                         dataPackTargetList.add(new DataPackTarget(dataPackDevice));
                         break;
                     case 0x1605:
@@ -647,45 +560,16 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
 
-                        //定位信息个数
-                        int count = buffer.readUnsignedShort();
-                        //定位信息列表
-                        for(int i = 0;i < count;i ++){
-                            //定位信息
-                            dataPackPosition = new DataPackPosition(dataPackObject);
-                            //定位信息-车速(km/h)
-                            dataPackPosition.setSpeed(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                            //定位信息-当前行程行驶距离(m)
-                            dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                            positions = LanduDataPackUtil.splitPositionString(buffer);
-                            //定位信息-经度
-                            dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
-                            //定位信息-纬度
-                            dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
-                            //定位信息-方向
-                            dataPackPosition.setDirection(Float.parseFloat(positions[2]));
-                            //定位信息-定位时间
-                            dataPackPosition.setPositionTime(LanduDataPackUtil.formatDateString(positions[3]));
-                            //定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
-                            dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
-                            //定位信息-定位方式描述
-                            switch (dataPackPosition.getPositioMode()) {
-                                case 0:
-                                    // 无效数据
-                                    dataPackPosition.setPositioModeDesc("无效数据");
-                                    break;
-                                case 1:
-                                    // 基站定位
-                                    dataPackPosition.setPositioModeDesc("基站定位");
-                                    break;
-                                case 2:
-                                    // GPS定位
-                                    dataPackPosition.setPositioModeDesc("GPS定位");
-                                    break;
+                        // 5.定位信息个数
+                        int count = LanduDataPackUtil.readWord(buffer);
+                        if(0 < count) {
+                            // 定位信息列表
+                            for(int i = 0;i < count;i ++){
+                                // 定位数据
+                                dataPackPosition = LanduDataPackUtil.readPositionObject(buffer, dataPackObject);
+                                // --add
+                                dataPackTargetList.add(new DataPackTarget(dataPackPosition));
                             }
-
-                            //添加分发数据
-                            dataPackTargetList.add(new DataPackTarget(dataPackPosition));
                         }
                         break;
                     case 0x1607:
@@ -701,17 +585,19 @@ public class DataParserLandu implements IDataParser {
                         // 5.检测数据时间
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
 
-                        //冻结帧个数
-                        count = buffer.readUnsignedShort();
+                        // 6.冻结帧个数
+                        count = LanduDataPackUtil.readWord(buffer);
                         if(0 < count) {
                             dataPeakList = new ArrayList<>();
 
-                            //冻结帧列表
+                            // 冻结帧列表
+                            Integer id;
+                            String content;
                             for(int i = 0; i < count; i++){
-                                //数据项id
-                                Integer id = buffer.readUnsignedShort();
-                                //数据项内容
-                                String content = LanduDataPackUtil.readString(buffer);
+                                // 数据项ID
+                                id = LanduDataPackUtil.readWord(buffer);
+                                // 数据项内容
+                                content = LanduDataPackUtil.readString(buffer);
 
                                 // 设置数值信息
                                 dataPeak = new DataPackPeak.Peak(id, content);
@@ -726,9 +612,10 @@ public class DataParserLandu implements IDataParser {
                                 dataPeakList.add(dataPeak);
                             }
 
-                            //添加分发数据
+                            // 添加分发数据
                             dataPackPeak = new DataPackPeak(dataPackObject);
                             dataPackPeak.setPeakList(dataPeakList);
+                            // --add
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                         }
                         break;
@@ -745,19 +632,20 @@ public class DataParserLandu implements IDataParser {
                         // 5.检测数据时间
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
 
-                        //故障码个数
-                        int alarmCount = buffer.readUnsignedByte();
+                        // 6.故障码个数
+                        int alarmCount = LanduDataPackUtil.readByte(buffer);
                         if(0 < alarmCount) {
                             dataAlarmList = new ArrayList<>();
 
-                            //故障码列表
+                            // 故障码列表
+                            String code, value, desc;
                             for(int i = 0;i < alarmCount;i ++){
-                                //故障码
-                                String code = LanduDataPackUtil.readString(buffer);
-                                //故障码属性
-                                String value = LanduDataPackUtil.readString(buffer);
-                                //故障码描述
-                                String desc = LanduDataPackUtil.readString(buffer);
+                                // 故障码
+                                code = LanduDataPackUtil.readString(buffer);
+                                // 故障码属性
+                                value = LanduDataPackUtil.readString(buffer);
+                                // 故障码描述
+                                desc = LanduDataPackUtil.readString(buffer);
 
                                 dataAlarm = new DataPackAlarm.Alarm("故障码");
                                 dataAlarm.setAlarmCode(code);
@@ -767,23 +655,26 @@ public class DataParserLandu implements IDataParser {
                                 dataAlarmList.add(dataAlarm);
                             }
 
-                            //添加分发数据
+                            // 添加分发数据
                             dataPackAlarm = new DataPackAlarm(dataPackObject);
                             dataPackAlarm.setAlarmList(dataAlarmList);
+                            // --add
                             dataPackTargetList.add(new DataPackTarget(dataPackAlarm));
                         }
 
-                        //数据流个数
-                        count = buffer.readUnsignedShort();
-                        if(0 < count) {
+                        // 7.数据流个数
+                        int dataCount = LanduDataPackUtil.readWord(buffer);
+                        if(0 < dataCount) {
                             dataPeakList = new ArrayList<>();
 
-                            //数据流列表(车况信息)
-                            for(int i = 0; i < count; i++){
-                                //数据项id
-                                Integer id = buffer.readUnsignedShort();
-                                //数据项内容
-                                String content = LanduDataPackUtil.readString(buffer);
+                            // 数据流列表(车况信息)
+                            Integer id;
+                            String content;
+                            for(int i = 0; i < dataCount; i++){
+                                // 数据项ID
+                                id = LanduDataPackUtil.readWord(buffer);
+                                // 数据项内容
+                                content = LanduDataPackUtil.readString(buffer);
 
                                 // 设置数值信息
                                 dataPeak = new DataPackPeak.Peak(id, content);
@@ -798,9 +689,10 @@ public class DataParserLandu implements IDataParser {
                                 dataPeakList.add(dataPeak);
                             }
 
-                            //添加分发数据
+                            // 添加分发数据
                             dataPackPeak = new DataPackPeak(dataPackObject);
                             dataPackPeak.setPeakList(dataPeakList);
+                            // --add
                             dataPackTargetList.add(new DataPackTarget(dataPackPeak));
                         }
                         break;
@@ -817,8 +709,8 @@ public class DataParserLandu implements IDataParser {
                         // 5.检测数据时间
                         dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(buffer));
 
-                        //数据类型
-                        int dataType = buffer.readUnsignedByte();
+                        // 6.数据类型
+                        int dataType = LanduDataPackUtil.readByte(buffer);
                         String behaviorName = null;
                         String behaviorDesc = null;
                         switch (dataType){
@@ -842,58 +734,43 @@ public class DataParserLandu implements IDataParser {
                                 behaviorName = "急转弯";
                                 behaviorDesc = "急转弯记录";
                                 break;
-                            case 0x05:
-                                System.out.println("## 无效");
+                            case 0xF0:
+                                System.out.println("拔下OBD记录");
+                                behaviorName = "拔下OBD";
+                                behaviorDesc = "拔下OBD记录";
                                 break;
-                        }
-                        //行为位置数据
-                        if(0 < dataType && 5 > dataType){
-                            // 定位信息
-                            dataPackPosition = new DataPackPosition(dataPackObject);
-                            // 定位信息-车速(km/h)
-                            dataPackPosition.setSpeed(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                            // 定位信息-当前行程行驶距离(m)
-                            dataPackPosition.setTravelDistance(Integer.parseInt(LanduDataPackUtil.readString(buffer)));
-                            positions = LanduDataPackUtil.splitPositionString(buffer);
-                            // 定位信息-经度
-                            dataPackPosition.setLongitude(LanduDataPackUtil.parsePositionString(positions[0]));
-                            // 定位信息-纬度
-                            dataPackPosition.setLatitude(LanduDataPackUtil.parsePositionString(positions[1]));
-                            // 定位信息-方向
-                            dataPackPosition.setDirection(Float.parseFloat(positions[2]));
-                            // 定位信息-定位时间
-                            dataPackPosition.setPositionTime(LanduDataPackUtil.formatDateString(positions[3]));
-                            // 定位信息-定位方式：0-无效数据，1-基站定位，2-GPS定位
-                            dataPackPosition.setPositioMode(Integer.parseInt(positions[4]));
-                            // 定位信息-定位方式描述
-                            switch (dataPackPosition.getPositioMode()) {
-                                case 0:
-                                    // 无效数据
-                                    dataPackPosition.setPositioModeDesc("无效数据");
-                                    break;
-                                case 1:
-                                    // 基站定位
-                                    dataPackPosition.setPositioModeDesc("基站定位");
-                                    break;
-                                case 2:
-                                    // GPS定位
-                                    dataPackPosition.setPositioModeDesc("GPS定位");
-                                    break;
-                            }
-                            //--add
-                            dataPackTargetList.add(new DataPackTarget(dataPackPosition));
+                            default:
+                                System.out.println("## 无效");
 
-                            // 行为数据
-                            DataPackBehavior dataPackBehavior = new DataPackBehavior(dataPackObject);
-                            dataPackBehavior.setBehaviorId(dataType);
-                            dataPackBehavior.setBehaviorName(behaviorName);
-                            dataPackBehavior.setBehaviorDesc(behaviorDesc);
-                            dataPackBehavior.setPosition(dataPackPosition);
-                            //--add
-                            dataPackTargetList.add(new DataPackTarget(dataPackBehavior));
+                        }
+
+                        // 7.位置数据
+                        switch (dataType) {
+                            case 0x01:
+                            case 0x02:
+                            case 0x03:
+                            case 0x04:
+                            case 0xF0:
+                                // 定位数据
+                                dataPackPosition = LanduDataPackUtil.readPositionObject(buffer, dataPackObject);
+                                // --add
+                                dataPackTargetList.add(new DataPackTarget(dataPackPosition));
+
+                                // 行为数据
+                                DataPackBehavior dataPackBehavior = new DataPackBehavior(dataPackObject);
+                                dataPackBehavior.setBehaviorId(dataType);
+                                dataPackBehavior.setBehaviorName(behaviorName);
+                                dataPackBehavior.setBehaviorDesc(behaviorDesc);
+                                dataPackBehavior.setPosition(dataPackPosition);
+                                // --add
+                                dataPackTargetList.add(new DataPackTarget(dataPackBehavior));
+                                break;
                         }
                         break;
                     case 0x1621:
+                        /**
+                         * 注：本命令在 V3.12 版本之后不再支持
+                         */
                         System.out.println("## 0x1621 - 3.2.2 取得车辆当前检测数据");
                         // 1.设备号
                         dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
@@ -903,26 +780,54 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
                         dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
-                        //故障等级
-                        int alarmLevel = buffer.readUnsignedByte();
-                        //故障码个数
-                        count = buffer.readUnsignedByte();
+
+                        // 5.故障等级
+                        int alarmLevel = LanduDataPackUtil.readByte(buffer);
+                        String alarmLevelDesc = null;
+                        switch (alarmLevel) {
+                            case 0x00:
+                                // 系统正常
+                                alarmLevelDesc = "系统正常";
+                                break;
+                            case 0x01:
+                                // 可忽略的故障
+                                alarmLevelDesc = "可忽略的故障";
+                                break;
+                            case 0x02:
+                                // 需要检修的故障
+                                alarmLevelDesc = "需要检修的故障";
+                                break;
+                            case 0x03:
+                                // 立即停车检修的故障
+                                alarmLevelDesc = "立即停车检修的故障";
+                                break;
+                            case 0xFF:
+                                // 当前状态不适合读码
+                                alarmLevelDesc = "当前状态不适合读码";
+                                break;
+                        }
+
+                        // 6.故障码个数
+                        count = LanduDataPackUtil.readByte(buffer);
                         if(0 < count) {
                             dataAlarmList = new ArrayList<>();
 
-                            //故障码列表
+                            // 故障码列表
+                            String code, value, desc;
                             for(int i = 0;i < count;i ++){
-                                //故障码
-                                String code = LanduDataPackUtil.readString(buffer);
-                                //故障码属性
-                                String value = LanduDataPackUtil.readString(buffer);
-                                //故障码描述
-                                String desc = LanduDataPackUtil.readString(buffer);
+                                // 故障码
+                                code = LanduDataPackUtil.readString(buffer);
+                                // 故障码属性
+                                value = LanduDataPackUtil.readString(buffer);
+                                // 故障码描述
+                                desc = LanduDataPackUtil.readString(buffer);
 
                                 dataAlarm = new DataPackAlarm.Alarm("故障码");
                                 dataAlarm.setAlarmCode(code);
                                 dataAlarm.setAlarmValue(value);
                                 dataAlarm.setAlarmDesc(desc);
+                                dataAlarm.setAlarmLevel(alarmLevel);
+                                dataAlarm.setAlarmLevelDesc(alarmLevelDesc);
 
                                 dataAlarmList.add(dataAlarm);
                             }
@@ -935,46 +840,9 @@ public class DataParserLandu implements IDataParser {
                         break;
                     case 0x1622:
                         System.out.println("## 0x1622 - 3.2.3 根据索引 ID 取得相应的检测数据");
+                        break;
                     case 0x1623:
                         System.out.println("## 0x1623 - 3.2.4 车辆诊断参数设定");
-                        // 1.设备号
-                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
-                        // 2.TripID
-                        dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
-                        // 3.VID
-                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
-                        // 4.VIN
-                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
-                        //项数
-                        count = buffer.readUnsignedShort();
-                        if(0 < count) {
-                            dataPeakList = new ArrayList<>();
-
-                            //数据项内容
-                            for(int i = 0; i < count; i++){
-                                //数据项id
-                                Integer id = buffer.readUnsignedShort();
-                                //数据项内容
-                                String content = LanduDataPackUtil.readString(buffer);
-
-                                // 设置数值信息
-                                dataPeak = new DataPackPeak.Peak(id, content);
-                                // 完善数据信息
-                                tempatePeak = LanduDataClassifyUtil.PEAK_MAP.get(id);
-                                if(null != tempatePeak) {
-                                    dataPeak.setPeakName(tempatePeak.getPeakName());
-                                    dataPeak.setPeakUnit(tempatePeak.getPeakUnit());
-                                    dataPeak.setPeakDesc(tempatePeak.getPeakDesc());
-                                }
-
-                                dataPeakList.add(dataPeak);
-                            }
-
-                            //添加分发数据
-                            dataPackPeak = new DataPackPeak(dataPackObject);
-                            dataPackPeak.setPeakList(dataPeakList);
-                            dataPackTargetList.add(new DataPackTarget(dataPackPeak));
-                        }
                         break;
                     case 0x1624:
                         System.out.println("## 0x1624 - 3.2.5 清空累计平均油耗");
@@ -986,16 +854,20 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
                         dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
-                        //错误代码
-                        int resultCode = buffer.readUnsignedByte();
 
+                        // 5.错误代码
+                        int resultCode = LanduDataPackUtil.readByte(buffer);
+
+                        // 6.设备回复下行命令执行结果
                         DataPackResult dataPackResult = new DataPackResult(dataPackObject);
                         dataPackResult.setResultCode(resultCode);
-
-                        //添加分发数据
+                        // --add
                         dataPackTargetList.add(new DataPackTarget(dataPackResult));
                         break;
                     case 0x1625:
+                        /**
+                         * 注：V3.12之后版本不再支持
+                         */
                         System.out.println("## 0x1625 - 3.2.6 取得系统版本信息");
                         // 1.设备号
                         dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
@@ -1006,20 +878,39 @@ public class DataParserLandu implements IDataParser {
                         // 4.VIN
                         dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
 
+                        // 5.上报设备信息
                         dataPackDevice = new DataPackDevice(dataPackObject);
-                        //硬件版本号
+                        // 5.1 硬件版本号
                         dataPackDevice.setHardwareVersion(LanduDataPackUtil.readString(buffer));
-                        //固件版本号
+                        // 5.2 固件版本号
                         dataPackDevice.setFirmwareVersion(LanduDataPackUtil.readString(buffer));
-                        //软件版本号
+                        // 5.3 软件版本号
                         dataPackDevice.setSoftwareVersion(LanduDataPackUtil.readString(buffer));
-                        //软件类别ID
-                        dataPackDevice.setSoftwareTypeId((int)buffer.readUnsignedByte());
-                        //添加分发数据
+                        // 5.4 软件类别ID
+                        dataPackDevice.setSoftwareTypeId(LanduDataPackUtil.readByte(buffer));
+                        // --add
                         dataPackTargetList.add(new DataPackTarget(dataPackDevice));
                         break;
                     case 0x1626:
                         System.out.println("## 0x1626 - 3.2.7 清除车辆故障码");
+                        // 1.设备号
+                        dataPackObject.setDeviceId(LanduDataPackUtil.readString(buffer));
+                        // 2.TripID
+                        dataPackObject.setTripId(LanduDataPackUtil.readDWord(buffer));
+                        // 3.VID
+                        dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
+                        // 4.VIN
+                        dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
+
+                        // 5.错误代码
+                        resultCode = LanduDataPackUtil.readByte(buffer);
+
+                        // 6.设备回复下行命令执行结果
+                        dataPackResult = new DataPackResult(dataPackObject);
+                        dataPackResult.setResultCode(resultCode);
+                        // --add
+                        dataPackTargetList.add(new DataPackTarget(dataPackResult));
+                        break;
                     case 0x16E0:
                         System.out.println("## 0x16E0 - 3.3.1 恢复出厂设置");
                         // 1.设备号
@@ -1030,13 +921,14 @@ public class DataParserLandu implements IDataParser {
                         dataPackObject.setVid(LanduDataPackUtil.readString(buffer));
                         // 4.VIN
                         dataPackObject.setVin(LanduDataPackUtil.readString(buffer));
-                        //错误代码
-                        resultCode = buffer.readUnsignedByte();
 
+                        // 5.错误代码
+                        resultCode = LanduDataPackUtil.readByte(buffer);
+
+                        // 6.设备回复下行命令执行结果
                         dataPackResult = new DataPackResult(dataPackObject);
                         dataPackResult.setResultCode(resultCode);
-
-                        //添加分发数据
+                        // --add
                         dataPackTargetList.add(new DataPackTarget(dataPackResult));
                         break;
                     default:

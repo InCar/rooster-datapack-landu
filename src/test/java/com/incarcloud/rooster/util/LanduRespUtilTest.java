@@ -1,5 +1,8 @@
 package com.incarcloud.rooster.util;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,5 +47,76 @@ public class LanduRespUtilTest {
     public void testResponse0x1603Bytes() {
         // AA55002FFFD004051603323031372D30382D30382032303A30303A303000000000000000000056302E30302E303000076C
         System.out.println(DatatypeConverter.printHexBinary(LanduRespUtil.response0x1603Bytes(data1603)));
+    }
+
+    @Test
+    public void testResponse0x1603Bytes2() throws Exception {
+        System.out.println("AA5500B8FF4704051603323031372D30382D30342031353A35303A3030000200FF00056465762E696E636172646174612E636F6D2E636E00232D6465762E696E636172646174612E636F6D2E636E00232D6465762E696E636172646174612E636F6D2E636E00232D6465762E696E636172646174612E636F6D2E636E00232D6465762E696E636172646174612E636F6D2E636E00232D04012D5AFF0004780006006E840302D0550002767902012C01FF00FF302E302E30003619");
+        byte[] helloBytes = LanduRespUtil.response0x1603Bytes(data1603, "dev.incardata.com.cn", 9005);
+        System.out.println(DatatypeConverter.printHexBinary(helloBytes));
+
+        ByteBuf respBuffer = Unpooled.wrappedBuffer(helloBytes);
+        respBuffer.readBytes(8);
+
+        System.out.println(String.format("命令字：%s", ByteBufUtil.hexDump(respBuffer.readBytes(2))));
+        System.out.println(String.format("当前时刻时间戮：%s", LanduDataPackUtil.readString(respBuffer)));
+        System.out.println(String.format("执行动作值数量：%d", LanduDataPackUtil.readByte(respBuffer)));
+        System.out.println(ByteBufUtil.hexDump(respBuffer.readBytes(2)));
+        int vehicleCount = LanduDataPackUtil.readByte(respBuffer);
+        System.out.println(String.format("车辆信息数量：%d", vehicleCount));
+        if(0 < vehicleCount) {
+            System.out.println(LanduDataPackUtil.readString(respBuffer));
+            System.out.println(ByteBufUtil.hexDump(respBuffer.readBytes(3)));
+            System.out.println(LanduDataPackUtil.readString(respBuffer));
+        }
+        int networkCount = LanduDataPackUtil.readByte(respBuffer);
+        System.out.println(String.format("网络配置数量：%d", networkCount));
+        for (int i = 0; i < networkCount; i++) {
+            System.out.print(LanduDataPackUtil.readString(respBuffer));
+            System.out.print(":");
+            System.out.println(LanduDataPackUtil.readWord(respBuffer));
+        }
+        int speedCount = LanduDataPackUtil.readByte(respBuffer);
+        System.out.println(String.format("车速分段统计设置数量：%d", speedCount));
+        for (int i = 0; i < speedCount; i++) {
+            System.out.println(LanduDataPackUtil.readByte(respBuffer));
+        }
+        int positionCount = LanduDataPackUtil.readByte(respBuffer);
+        System.out.println(String.format("定位参数设置参数数量：%d", positionCount));
+        if(0 < positionCount) {
+            System.out.println(LanduDataPackUtil.readWord(respBuffer));
+            System.out.println(LanduDataPackUtil.readWord(respBuffer));
+            System.out.println(LanduDataPackUtil.readByte(respBuffer));
+        }
+        int alarmCount = LanduDataPackUtil.readByte(respBuffer);
+        System.out.println(String.format("报警设置参数数量：%d", alarmCount));
+        if(0 < alarmCount) {
+            System.out.println(LanduDataPackUtil.readByte(respBuffer));
+            System.out.println(LanduDataPackUtil.readWord(respBuffer));
+            System.out.println(LanduDataPackUtil.readWord(respBuffer));
+            System.out.println(LanduDataPackUtil.readByte(respBuffer));
+        }
+        int flameOutCount = LanduDataPackUtil.readByte(respBuffer);
+        System.out.println(String.format("熄火后数据数量：%d", flameOutCount));
+        if(0 < flameOutCount) {
+            System.out.println(LanduDataPackUtil.readWord(respBuffer));
+            System.out.println(LanduDataPackUtil.readByte(respBuffer));
+            int voltageCount = LanduDataPackUtil.readWord(respBuffer);
+            System.out.println(voltageCount);
+            for (int i = 0; i < voltageCount; i++) {
+                System.out.println(LanduDataPackUtil.readByte(respBuffer));
+            }
+        }
+        int runDataCount = LanduDataPackUtil.readByte(respBuffer);
+        System.out.println(String.format("运行中数据设置数量：%d", runDataCount));
+        if(0 < runDataCount) {
+            System.out.println(LanduDataPackUtil.readWord(respBuffer));
+            for (int i = 0; i < runDataCount; i++) {
+                System.out.println(LanduDataPackUtil.readWord(respBuffer));
+            }
+        }
+        System.out.println(String.format("软件升级ID：%s", LanduDataPackUtil.readString(respBuffer)));
+
+        respBuffer.release();
     }
 }

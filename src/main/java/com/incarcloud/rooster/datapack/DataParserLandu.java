@@ -37,9 +37,6 @@ public class DataParserLandu implements IDataParser {
         DataParserManager.register(PROTOCOL_PREFIX + "3.08", DataParserLandu.class);
     }
 
-
-
-
     /**
      * 数据包准许最大容量2M
      */
@@ -189,7 +186,7 @@ public class DataParserLandu implements IDataParser {
                 if(0x16 == originalBytes[8] && 0x03 == originalBytes[9]) {
                     // 命令字：0x1603
                     // 不设置任何参数
-                    returnBytes = LanduRespUtil.response0x1603Bytes(originalBytes);
+                    returnBytes = LanduRespUtil.response0x1603Bytes(originalBytes, "dev.incardata.com.cn", 9005);
                 } else {
                     // 命令字：非0x1603
                     // 回复成功状态

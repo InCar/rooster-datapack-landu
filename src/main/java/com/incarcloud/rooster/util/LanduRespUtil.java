@@ -107,7 +107,7 @@ public class LanduRespUtil {
         // 7.9 运行中数据设置（【数据 ID 数量】+【【数据间隔时间】+【【数据 ID】…+】】）
         buffer.writeByte(0x00);
         // 7.10 软件升级
-        buffer.writeBytes("V0.00.00".getBytes(defaultCharsetGBK));
+        buffer.writeBytes("0.0.0".getBytes(defaultCharsetGBK));
         buffer.writeByte(0x00);
 
         // 8.获得字节码
@@ -161,8 +161,8 @@ public class LanduRespUtil {
 
         // 7.回复内容
         // 7.1 当前时刻时间戮（【STRING】YYYY-MM-DD hh:mm:ss）
-        //buffer.writeBytes(defaultDateFormat.format(Calendar.getInstance().getTime()).getBytes(defaultCharsetGBK));
-        buffer.writeBytes("2017-08-04 15:50:00".getBytes(defaultCharsetGBK));
+        //buffer.writeBytes("2017-08-04 15:50:00".getBytes(defaultCharsetGBK));
+        buffer.writeBytes(defaultDateFormat.format(Calendar.getInstance().getTime()).getBytes(defaultCharsetGBK));
         buffer.writeByte(0x00); //end
         // 7.2 执行动作值（【动作参数数量】+【恢复出厂设置序号】+【是否执行清码动作】）
         buffer.writeByte(0x02); // 仅能取值 0x00 或 0x02,其它值非法

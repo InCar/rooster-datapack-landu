@@ -4,6 +4,7 @@ package com.incarcloud.rooster.datapack;/**
 
 import io.netty.buffer.ByteBuf;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +28,7 @@ public class DataParserLanduUbi implements IDataParser {
          * 声明数据包版本与解析器类关系
          */
         DataParserManager.register(PROTOCOL_PREFIX + "2.5", DataParserLanduUbi.class);
+        DataParserManager.register(PROTOCOL_PREFIX + "3.5", DataParserLanduUbi.class);
     }
 
     /**
@@ -63,10 +65,11 @@ public class DataParserLanduUbi implements IDataParser {
         }
 
 
-        boolean skipFlag;//是否跳过字节，buf中可能含有不完整包的情况，这些不完整的包直接跳过
-        int readIndex/*当前读指针*/, writeIndex/*当前写指针*/, packLen/*数据包长度字段值*/, sum/**/, sumCheck/**/;
+        DataPack dataPack;
+        List<DataPack>  dataPackList = new ArrayList<>();
+
+        int readIndex/*当前读指针*/, writeIndex/*当前写指针*/, packLenVal/*数据包长度字段值*/, packCheck/*数据包实际校验和*/, packCheckVal/*数据包校验和字段值*/;
         while(buffer.isReadable()) {
-            skipFlag = true;
             readIndex = buffer.readerIndex();
             writeIndex = buffer.writerIndex();
 
@@ -88,9 +91,8 @@ public class DataParserLanduUbi implements IDataParser {
             }
 
             //获取数据包长度字段，数据包长度字段是从【数据包长度】起至【校验和】止的所有字节数量，不是整个包的长度
-            packLen = (buffer.getByte(readIndex + 2) & 0xFF) << 8 | (buffer.getByte(readIndex + 3) & 0xFF);
-
-            if(packLen > (writeIndex - readIndex - 2)) {//buffer中可读字节数小于数据包的长度
+            packLenVal = (buffer.getByte(readIndex + 2) & 0xFF) << 8 | (buffer.getByte(readIndex + 3) & 0xFF);
+            if(packLenVal > (writeIndex - readIndex - 2)) {//buffer中可读字节数小于数据包的长度
                 //包长度不够，有以下两种情况
                 // 1、可能是tcp拆包引起的半个包情况，直接跳出循环结束此次解析,等缓存区积累够了再解析
                 // 2、包体里面含有 AA 55而且AA 55 后面的4个字节能通过数据包长度校验 导致解析出错,这种情况有可能会误伤后面的正常包，
@@ -99,24 +101,45 @@ public class DataParserLanduUbi implements IDataParser {
             }
 
 
+            //校验和(最后两字节)验证
+            packCheckVal = (buffer.getByte(readIndex + packLenVal) & 0xFF) << 8 | (buffer.getByte(readIndex + packLenVal + 1) & 0xFF);
+            //计算实际校验和
+            packCheck=0;
+            for (int i = readIndex + 2, n = readIndex + packLenVal; i < n; i++) {
+                packCheck += (buffer.getByte(i) & 0xFF);
+            }
+            if(packCheck != packCheckVal){
+                buffer.skipBytes(2);//这里前面包头检查通过，所以跳过已校验的 AA 55 两个字节
+                continue;
+            }
 
+            // 版本(第7个字节为协议格式版本)
+            String version = null;
+            switch (buffer.getByte(readIndex + 7)) {
+                case 0x02:
+                    version = "2.05";
+                    break;
+                case 0x05:
+                    version = "3.08";
+                    break;
+                default:
+                    version = "unknown";
+            }
 
-
-
-
-
-
-
-
-
-
-
+            // 打包
+            dataPack = new DataPack(PROTOCOL_GROUP, PROTOCOL_NAME, version);
+            dataPack.setBuf(buffer.slice(readIndex, packLenVal + 2));
+            dataPackList.add(dataPack);
+            buffer.skipBytes(packLenVal + 2);
         }
-
-
 
         // 扔掉已读数据
         buffer.discardSomeReadBytes();
+
+
+        if(dataPackList.size() > 0){
+            return dataPackList;
+        }
 
         return null;
     }

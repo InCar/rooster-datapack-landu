@@ -338,7 +338,7 @@ public class DataParserLanduUbi implements IDataParser {
 
 
                     //6.0数据内容
-                    ByteBuf contentBuf = dataBuf.slice(dataBuf.readerIndex(),dataBuf.writerIndex() - dataBuf.readerIndex() - 2);
+                    ByteBuf contentBuf = dataBuf.slice(dataBuf.readerIndex(), dataBuf.writerIndex() - dataBuf.readerIndex() - 2);
 
                     contentBuf.markReaderIndex();
                     //6.1总数据项数
@@ -347,13 +347,222 @@ public class DataParserLanduUbi implements IDataParser {
                     int totalBytes = LanduDataPackUtil.readWord(contentBuf);
                     contentBuf.resetReaderIndex();
 
+                    //6.3数据项列表
+                    ByteBuf itemListBuf = contentBuf.slice(4, contentBuf.writerIndex() - 4);
+                    int itemId/*数据项ID*/, itemLen/*数据项长度*/;
+                    ByteBuf itemDataBuf;//数据值
+                    while (itemListBuf.isReadable()) {//读取数据项
+                        itemId = LanduDataPackUtil.readWord(itemListBuf);
+                        itemLen = LanduDataPackUtil.readByte(itemListBuf);
+                        itemDataBuf = itemListBuf.slice(itemListBuf.readerIndex(), itemLen);
+                        itemListBuf.skipBytes(itemLen);
+
+                        //TODO ADAS数据
+                        switch (itemId) {
+                            case 0x0A01://
+                                int code = (int) LanduDataPackUtil.readUInt4(itemDataBuf);//前两字节为0
+                                byte b0 = itemDataBuf.readByte();
+                                byte b1 = itemDataBuf.readByte();
+                                byte b2 = itemDataBuf.readByte();
+                                byte b3 = itemDataBuf.readByte();
+                                byte b4 = itemDataBuf.readByte();
+                                byte b5 = itemDataBuf.readByte();
+                                byte b6 = itemDataBuf.readByte();
+                                byte b7 = itemDataBuf.readByte();
+
+                                switch (code) {
+                                    case 0x0700:
+                                        //时间标识
+                                        int timeIndicator = (b0 & 0b00011000) >>> 3;
+
+
+                                        //•	Display sound type  显示声音类型
+                                        int soundType = b0 & 0b00000111;
+
+
+                                        //错误码
+                                        if(0x0 == (b3 & 0b00000001)){//最后一位为0表示有错误
+                                            int errorCode = (b3 & 0b11111110) >>> 1;
+                                        }
+
+
+                                        //Lane Departure Warning left and right 左右偏离车道报警
+                                        if((b4 & 0b00000001) == 1){//最后一位表示是否开启车道报警
+                                            boolean leftLDW = ((b4 & 0b00000010) >>> 1) == 1 ? true : false;
+                                            boolean rightLDW = ((b4 & 0b00000100) >>> 2) == 1 ? true : false;
+                                        }
 
 
 
-                    // 数据项列表
-                    ByteBuf itemListBuf = contentBuf.slice(4,contentBuf.writerIndex() - 4);
-                    while (itemListBuf.isReadable()){
+                                        //Low Speed detection off  低速度检测
 
+
+                                        //Headway in seconds 行驶速度
+                                        boolean zeroSpeed = ((b1 & 0b00100000) >>> 5) == 1 ? true:false;
+                                        boolean headWay = ((b2 & 0b11111110) >>> 1) == 1 ? true:false;
+
+
+                                        //FCW前方碰撞预警
+                                        boolean fcw = ((b4 & 0b00001000) >>> 3)  == 1 ? true:false;
+
+
+                                        //Pedestrian detection and warning   行人碰撞预警
+                                        boolean pedsDZ = ((b5 & 0b00000100) >>> 2) == 1 ? true:false;
+                                        boolean pedsFCW = ((b5 & 0b00000010) >>> 1) == 1 ? true:false;
+
+
+
+                                        //Hi/Low beam decision 强弱光束
+
+
+                                        //HMW level 超速报警级别
+                                        int HMWLevel = b7 & 0b00000011;
+
+
+                                        //Failsafe events: Low visibility, Maintenance故障安全事件:低可见性，维护
+                                        boolean failSafe = ((b4 & 0b10000000) >>> 7 ) == 1 ? true : false;
+
+
+                                        //TSR Warning Level交通标志识别警告级别
+                                        boolean tsrOn = ((b5 & 0b10000000) >>> 7 ) == 1 ? true : false;
+                                        if(tsrOn){
+                                            int tsrLevel = b6 & 0b00000111;
+                                        }
+
+                                        //Tamper Alert  警告篡改
+                                        boolean tamperAlert = ((b5 & 0b00100000) >>> 5) == 1 ? true : false;
+                                        break;
+
+
+
+                                    case 0x0720:
+                                        //Sign Type
+                                        int signType = b0;
+                                        //Supplementary Sign Type
+                                        int supplementarySignType = b1;
+                                        //Sign Position X
+                                        int signPosX = b2;//Range: 0…122
+                                        //Sign Position Y
+                                        int signPosY = b3 & 0b01111111;//Range: -32… 31
+                                        //Sign Position Z
+                                        int signPosZ =  b4 & 0b00111111;//Range: -16… 16
+                                        //Filter Type
+                                        int filterType = b5;
+
+                                        break;
+                                    case 0x0721:
+                                        break;
+                                    case 0x0722:
+                                        break;
+                                    case 0x0723:
+                                        break;
+                                    case 0x0724:
+                                        break;
+                                    case 0x0725:
+                                        break;
+                                    case 0x0726:
+                                        break;
+
+
+
+                                    case 0x0727:
+                                        int signTypeD1 = b0;
+                                        int supplementarySignTypeD1 = b1;
+                                        int signTypeD2 = b2;
+                                        int supplementarySignTypeD2 = b3;
+                                        int signTypeD3 = b4;
+                                        int supplementarySignTypeD3 = b5;
+                                        int signTypeD4 = b6;
+                                        int supplementarySignTypeD4 = b7;
+
+
+                                        break;
+
+
+
+                                    case 0x0760:
+                                        //	Left blink 左灯闪烁
+                                        int leftBlink = (b0 & 0b00000010) >>> 1;//1 if left turn signal is on, 0 if off.
+
+                                        //	Right Blink
+                                        int rightBlink = (b0 & 0b00000100) >>> 2;//1 if right turn signal is on, 0 if off.
+
+
+                                        //	Speed
+                                        int speedAvailable = (b1 & 0b10000000) >>> 7 ;//1 if Speed available
+                                        int speed = b2;//Unit: km/h
+
+                                        //	Brakes 刹车
+                                        int brakes = b0 & 0b00000001;//1 if right turn signal is on, 0 if off
+
+                                        //	High beam 强光
+                                        int highBeamAvailable = (b1 & 0b00100000) >>> 5;//1 if High Beam available
+                                        int highBeam = (b0 & 0b00100000) >>> 5;//1 if High Beam on, 0 if off
+                                        int lowBeamAvailable = (b1 & 0b00100000) >>> 4;// 1 if Low Beam available
+                                        int lowBeam = (b0 & 0b00010000) >>> 4;//1 if Low Beam on, 0 if off.
+
+
+                                        //	Wipers  雨刮
+                                        int wipersAvailable = (b1 & 0b00001000) >>> 3;//1 if Wipers available
+                                        int wipers = (b0 & 0b00001000) >>> 3;//1 when a Wiper passes the windshield, 0 if a wiper is static
+
+                                        break;
+                                }
+
+
+                                break;
+                        }
+
+
+                        // TODO 补充的
+                        int val;
+                        switch (itemId) {
+                            case 0x0000: //蓄电池电压
+                                val = LanduDataPackUtil.readByte(itemDataBuf) / 10;
+                                System.out.println(val);
+                                break;
+                            case 0x0004: //燃油系统1状态
+                                val = LanduDataPackUtil.readByte(itemDataBuf);
+                                System.out.println(val);
+
+                                break;
+                            case 0x0007: //发动机冷却液温度
+                                val = LanduDataPackUtil.readByte(itemDataBuf);
+                                System.out.println(val);
+                                break;
+                        }
+
+
+                        //TODO 诊断数据 (文档无说明)
+
+
+                        //TODO 车身数据
+
+
+                        //TODO 定位数据
+
+
+                        //TODO J1939数据(文档无说明)
+
+
+                        //TOOD 其它数据
+                        switch (itemId) {
+                            case 0x0E00: //行程ID
+                                break;
+                            case 0x0E01://点火时间
+                                break;
+                            case 0x0E02://熄火时间
+                                break;
+                            case 0x0E03://急加速次数
+                                break;
+                            case 0x0E04://急减速次数
+                                break;
+                            case 0x0E05://急转弯次数
+                                break;
+                            case 0x0E06://行驶里程
+                                break;
+
+                        }
 
                     }
 
@@ -362,11 +571,11 @@ public class DataParserLanduUbi implements IDataParser {
                     ;
             }
 
-            if(dataPackTargetList.size() > 0){
+            if (dataPackTargetList.size() > 0) {
                 return dataPackTargetList;
             }
 
-        } catch (UnsupportedEncodingException  | ParseException   e) {
+        } catch (UnsupportedEncodingException | ParseException e) {
 
         }
 

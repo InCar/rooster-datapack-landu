@@ -442,10 +442,16 @@ public class DataParserLanduUbi implements IDataParser {
                                         int supplementarySignType = b1;
                                         //Sign Position X
                                         int signPosX = b2;//Range: 0…122
-                                        //Sign Position Y
-                                        int signPosY = b3 & 0b01111111;//Range: -32… 31
-                                        //Sign Position Z
-                                        int signPosZ =  b4 & 0b00111111;//Range: -16… 16
+
+
+                                        /**
+                                         * 7位补码和6位补码转8位补码，正数前加0、负数前加1
+                                         * 同理8位补码转6位补码(不超过6位数值范围)，正数减去前面0，负数减去前面1
+                                         */
+                                        //Sign Position Y，Range: -32… 31
+                                        int signPosY = ((byte) ( ((byte)(b3 & 0b01111111)) << 1)) >> 1;//左移一位再有符号右移一位
+                                        //Sign Position Z，-16… 16
+                                        int signPosZ = ((byte) ( ((byte)(b4 & 0b01111111)) << 2)) >> 2;//左移2位再有符号右移2位
                                         //Filter Type
                                         int filterType = b5;
 

@@ -32,8 +32,7 @@ public class DataParserLanduUbi implements IDataParser {
         /**
          * 声明数据包版本与解析器类关系
          */
-        DataParserManager.register(PROTOCOL_PREFIX + "2.5", DataParserLanduUbi.class);
-        DataParserManager.register(PROTOCOL_PREFIX + "3.5", DataParserLanduUbi.class);
+        DataParserManager.register(PROTOCOL_PREFIX + "0x30", DataParserLanduUbi.class);
     }
 
     /**

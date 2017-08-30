@@ -177,7 +177,7 @@ public class LanduDataPackUtil extends DataPackUtil {
         DataPackPosition dataPackPosition = new DataPackPosition(dataPackObject);
 
         // 车速(km/h)
-        dataPackPosition.setSpeed(Integer.parseInt(readString(buffer)));
+        dataPackPosition.setSpeed(Float.parseFloat(readString(buffer)));
         // 当前行程行驶距离(m)
         dataPackPosition.setTravelDistance(Integer.parseInt(readString(buffer)));
 

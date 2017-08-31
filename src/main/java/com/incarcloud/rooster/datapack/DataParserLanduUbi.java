@@ -43,6 +43,12 @@ public class DataParserLanduUbi implements IDataParser {
 
 
     /**
+     * vin码的正则表达式
+     */
+    private static final String VIN_REG = "^[0-9A-Z]{17}$";
+
+
+    /**
      * <p>抽取出完整有效的数据包,并从buffer丢弃掉已经解析或无用的字节</p>
      * <p>
      * ## LANDU数据包格式 ##
@@ -311,7 +317,10 @@ public class DataParserLanduUbi implements IDataParser {
                     // 3.VID
                     dataPackObject.setVid(LanduDataPackUtil.readString(dataBuf));
                     // 4.VIN
-                    dataPackObject.setVin(LanduDataPackUtil.readString(dataBuf));
+                    String v03 = LanduDataPackUtil.readString(dataBuf);
+                    if(Pattern.matches(VIN_REG,v03)){
+                        dataPackObject.setVin(v03);
+                    }
 
                     // 5.上报设备信息
                     dataPackDevice = new DataPackDevice(dataPackObject);
@@ -358,7 +367,10 @@ public class DataParserLanduUbi implements IDataParser {
                     // 3.VID
                     dataPackObject.setVid(LanduDataPackUtil.readString(dataBuf));
                     // 4.VIN
-                    dataPackObject.setVin(LanduDataPackUtil.readString(dataBuf));
+                    String v20 = LanduDataPackUtil.readString(dataBuf);
+                    if(Pattern.matches(VIN_REG,v20)){
+                        dataPackObject.setVin(v20);
+                    }
                     // 5.检测数据时间
                     dataPackObject.setDetectionTime(LanduDataPackUtil.readDate(dataBuf));
 
@@ -1377,6 +1389,8 @@ public class DataParserLanduUbi implements IDataParser {
 
         return null;
     }
+
+
 
     @Override
     public Map<String, Object> getMetaData(ByteBuf buffer) {

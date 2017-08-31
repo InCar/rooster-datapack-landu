@@ -296,7 +296,7 @@ public class DataParserLanduUbi implements IDataParser {
             //跳过版本读命令字
             dataBuf.skipBytes(1);
             int commandId = LanduDataPackUtil.readWord(dataBuf);//命令字
-            System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&commandId: " + commandId);
+            System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&commandId: "+ByteBufUtil.hexDump(new byte[]{(byte)(commandId >>> 8 & 0xFF),(byte)commandId}));
             switch (commandId) {
                 case 0x1603:
                     //上报设备数据
@@ -336,7 +336,7 @@ public class DataParserLanduUbi implements IDataParser {
                     DataPackAlarm dataPackAlarm = new DataPackAlarm(dataPackObject);//报警数据
                     dataPackAlarm.setAlarmList(new LinkedList<>());
                     //车辆信号灯
-                    DataPackCarSignals carSignals = null;
+                    DataPackCarSignals carSignals =null;
 
                     DataPackSignInfo signInfo = null;
 
@@ -383,12 +383,13 @@ public class DataParserLanduUbi implements IDataParser {
                         itemDataBuf = itemListBuf.slice(itemListBuf.readerIndex(), itemLen);
                         itemListBuf.skipBytes(itemLen);
 
-                        System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&itemId:" + itemId + ",itemLen:" + itemLen);//TODO
+                        System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&itemId:"+ ByteBufUtil.hexDump(new byte[]{(byte)(itemId >>> 8 & 0xFF),(byte)itemId})    +",itemLen:"+itemLen);//TODO
 
 /*-------------------------  ADAS数据------------------------------------------------------*/
                         switch (itemId) {
                             case 0x0A01://ADAS数据现在只有 0x0A01
-                                int code = (int) LanduDataPackUtil.readUInt4(itemDataBuf);//前两字节为0,剩下8字节是数据区
+                                itemDataBuf.skipBytes(2);
+                                int code =  LanduDataPackUtil.readWord(itemDataBuf);//前两字节为0,最后8字节是数据区
                                 byte b0 = itemDataBuf.readByte();
                                 byte b1 = itemDataBuf.readByte();
                                 byte b2 = itemDataBuf.readByte();
@@ -399,7 +400,7 @@ public class DataParserLanduUbi implements IDataParser {
                                 byte b7 = itemDataBuf.readByte();
 
 
-                                System.out.println("&&&&&&&&&&&&&&&&& adas code:" + code);
+                                System.out.println("&&&&&&&&&&&&&&&&& adas code:"+ ByteBufUtil.hexDump(new byte[]{(byte)(code >>> 8 & 0xFF),(byte)code}));
                                 switch (code) {
                                     case 0x0700://显示和报警数据
                                         //时间标识
@@ -559,6 +560,7 @@ public class DataParserLanduUbi implements IDataParser {
                                     case 0x0726:
 
 
+
                                         //Sign Type
                                         int signType = b0;
                                         //Supplementary Sign Type
@@ -634,12 +636,12 @@ public class DataParserLanduUbi implements IDataParser {
 
                                 int keyCdtVal = (b & 0b11110000) >>> 4;
                                 int fireSwithCdtVal = b & 0b00001111;
-                                Map<String, Integer> valMap0 = new HashMap<>();
-                                valMap0.put("key", keyCdtVal);
-                                valMap0.put("fireSwith", fireSwithCdtVal);
+                                Map<String,Integer> valMap0 = new HashMap<>();
+                                valMap0.put("key",keyCdtVal);
+                                valMap0.put("fireSwith",fireSwithCdtVal);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> keyFireSwithCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_FIRESWITCH,
-                                        valMap0, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_FIRESWITCH), new byte[]{b});
+                                DataPackCondition.CarCondition<Map<String,Integer>> keyFireSwithCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_FIRESWITCH,
+                                        valMap0,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_FIRESWITCH),new byte[]{b});
                                 dataPackCondition.getConditionList().add(keyFireSwithCdt);
                                 break;
                             case 0x0401://档位状态
@@ -648,334 +650,334 @@ public class DataParserLanduUbi implements IDataParser {
                                 int level1Gear = (b1 & 0b11110000) >>> 4;
                                 int level2Gear = b1 & 0b00001111;
 
-                                Map<String, Integer> valMap1 = new HashMap<>();
-                                valMap1.put("level1Gear", level1Gear);
-                                valMap1.put("level2Gear", level2Gear);
+                                Map<String,Integer> valMap1 = new HashMap<>();
+                                valMap1.put("level1Gear",level1Gear);
+                                valMap1.put("level2Gear",level2Gear);
 
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> gearCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_GEARSTATUS,
-                                        valMap1, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_GEARSTATUS), new byte[]{b1});
+                                DataPackCondition.CarCondition<Map<String,Integer>> gearCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_GEARSTATUS,
+                                        valMap1,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_GEARSTATUS),new byte[]{b1});
                                 dataPackCondition.getConditionList().add(gearCdt);
                                 break;
                             case 0x0402://防盗监控
                                 byte b2 = itemDataBuf.readByte();
                                 DataPackCondition.CarCondition<Integer> antiTheftCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_ANTI_THEFT_MONITOR,
-                                        b2 & 0b00001111, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ANTI_THEFT_MONITOR), new byte[]{b2});
+                                        b2 & 0b00001111,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ANTI_THEFT_MONITOR),new byte[]{b2});
                                 dataPackCondition.getConditionList().add(antiTheftCdt);
                                 break;
                             case 0x0403://档位状态（吉利金刚）
-                                byte b3 = itemDataBuf.readByte();
+                                byte  b3 = itemDataBuf.readByte();
                                 DataPackCondition.CarCondition<Integer> geelyJgCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_GEARSTATUS_GEELY_JG,
-                                        b3 & 0xFF, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_GEARSTATUS_GEELY_JG), new byte[]{b3});
+                                        b3 & 0xFF,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_GEARSTATUS_GEELY_JG),new byte[]{b3});
                                 dataPackCondition.getConditionList().add(geelyJgCdt);
                                 break;
                             case 0x0410://车锁
-                                byte[] b10 = new byte[2];
+                                byte [] b10 = new byte[2];
                                 itemDataBuf.readBytes(b10);
 
-                                Map<String, Integer> valMap10 = new HashMap<>();
+                                Map<String,Integer> valMap10 = new HashMap<>();
 
                                 int carLock = b10[0] & 0b00000011;//车锁（0-未锁，1-已上锁）
                                 int leftFrontDoorLock = (b10[0] & 0b00001100) >>> 2;//左前门锁
                                 int rightFrontDoorLock = (b10[0] & 0b00110000) >>> 4;//右前门锁
-                                int leftRearDoorLock = (b10[0] & 0b11000000) >>> 6;//左后门锁
+                                int leftRearDoorLock =  (b10[0] & 0b11000000) >>> 6;//左后门锁
 
                                 int rightRearDoorLock = b10[1] & 0b00000011;//右后门锁
 
-                                valMap10.put("carLock", carLock);
-                                valMap10.put("leftFrontDoorLock", leftFrontDoorLock);
-                                valMap10.put("rightFrontDoorLock", rightFrontDoorLock);
-                                valMap10.put("leftRearDoorLock", leftRearDoorLock);
-                                valMap10.put("rightRearDoorLock", rightRearDoorLock);
+                                valMap10.put("carLock",carLock);
+                                valMap10.put("leftFrontDoorLock",leftFrontDoorLock);
+                                valMap10.put("rightFrontDoorLock",rightFrontDoorLock);
+                                valMap10.put("leftRearDoorLock",leftRearDoorLock);
+                                valMap10.put("rightRearDoorLock",rightRearDoorLock);
 
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> lockCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_LOCK,
-                                        valMap10, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_LOCK), b10);
+                                DataPackCondition.CarCondition<Map<String,Integer>> lockCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_LOCK,
+                                        valMap10,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_LOCK),b10);
                                 dataPackCondition.getConditionList().add(lockCdt);
                                 break;
                             case 0x0411://车门
-                                byte[] b11 = new byte[2];
+                                byte [] b11 = new byte[2];
                                 itemDataBuf.readBytes(b11);
 
-                                Map<String, Integer> valMap11 = new HashMap<>();
+                                Map<String,Integer> valMap11 = new HashMap<>();
 
                                 int carDoor = b11[0] & 0b00000011;//车门总体状态（0-关，1-开）
                                 int leftFrontDoor = (b11[0] & 0b00001100) >>> 2;//左前门
                                 int rightFrontDoor = (b11[0] & 0b00110000) >>> 4;//右前门
-                                int leftRearDoor = (b11[0] & 0b11000000) >>> 6;//左后门
+                                int leftRearDoor =  (b11[0] & 0b11000000) >>> 6;//左后门
 
                                 int rightRearDoor = b11[1] & 0b00000011;//右后门
-                                int trunkDoor = (b11[1] & 0b00001100) >>> 2;//后备箱/尾门
-                                int engineHood = (b11[1] & 0b00110000) >>> 4;//引擎盖
-                                int fuelTankCap = (b11[1] & 0b11000000) >>> 6;//油箱盖
+                                int trunkDoor = (b11[1] & 0b00001100)>>>2;//后备箱/尾门
+                                int engineHood = (b11[1] & 0b00110000)>>>4;//引擎盖
+                                int fuelTankCap = (b11[1] & 0b11000000)>>>6;//油箱盖
 
-                                valMap11.put("carDoor", carDoor);
-                                valMap11.put("leftFrontDoor", leftFrontDoor);
-                                valMap11.put("rightFrontDoor", rightFrontDoor);
-                                valMap11.put("leftRearDoor", leftRearDoor);
-                                valMap11.put("rightRearDoor", rightRearDoor);
-                                valMap11.put("trunkDoor", trunkDoor);
-                                valMap11.put("engineHood", engineHood);
-                                valMap11.put("fuelTankCap", fuelTankCap);
+                                valMap11.put("carDoor",carDoor);
+                                valMap11.put("leftFrontDoor",leftFrontDoor);
+                                valMap11.put("rightFrontDoor",rightFrontDoor);
+                                valMap11.put("leftRearDoor",leftRearDoor);
+                                valMap11.put("rightRearDoor",rightRearDoor);
+                                valMap11.put("trunkDoor",trunkDoor);
+                                valMap11.put("engineHood",engineHood);
+                                valMap11.put("fuelTankCap",fuelTankCap);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> doorCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_DOOR,
-                                        valMap11, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_DOOR), b11);
+                                DataPackCondition.CarCondition<Map<String,Integer>> doorCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_DOOR,
+                                        valMap11,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_DOOR),b11);
                                 dataPackCondition.getConditionList().add(doorCdt);
                                 break;
                             case 0x0412://车灯
                                 byte[] b12 = new byte[3];
                                 itemDataBuf.readBytes(b12);
 
-                                Map<String, Integer> valMap12 = new HashMap<>();
-                                int carLight = b12[0] & 0b00000011;//车灯总体状态（0-关，1-开）
+                                Map<String,Integer> valMap12 = new HashMap<>();
+                                int carLight  = b12[0] & 0b00000011;//车灯总体状态（0-关，1-开）
                                 int warmLight = (b12[0] & 0b00001100) >>> 2;//示警灯/双闪（0-关，1-开）
                                 int turnLight = (b12[0] & 0b00110000) >>> 4;//转向灯
-                                int dayRunLight = (b12[0] & 0b11000000) >>> 6;//日间行车灯
+                                int dayRunLight =  (b12[0] & 0b11000000) >>> 6;//日间行车灯
 
                                 int widthLight = b12[1] & 0b00000011;//示宽灯
-                                int nearLight = (b12[1] & 0b00001100) >>> 2;//近光灯
-                                int farLight = (b12[1] & 0b00110000) >>> 4;//远光灯
-                                int frontFogLight = (b12[1] & 0b11000000) >>> 6;//前雾灯
+                                int nearLight = (b12[1] & 0b00001100)>>>2;//近光灯
+                                int farLight = (b12[1] & 0b00110000)>>>4;//远光灯
+                                int frontFogLight = (b12[1] & 0b11000000)>>>6;//前雾灯
 
                                 int backFogLight = b12[2] & 0b00000011;//后雾灯
-                                int brakeLight = (b12[2] & 0b00001100) >>> 2;//刹车灯
+                                int brakeLight = (b12[2] & 0b00001100)>>>2;//刹车灯
 
-                                valMap12.put("carLight", carLight);
-                                valMap12.put("warmLight", warmLight);
-                                valMap12.put("turnLight", turnLight);
-                                valMap12.put("dayRunLight", dayRunLight);
-                                valMap12.put("widthLight", widthLight);
-                                valMap12.put("nearLight", nearLight);
-                                valMap12.put("farLight", farLight);
-                                valMap12.put("frontFogLight", frontFogLight);
-                                valMap12.put("backFogLight", backFogLight);
-                                valMap12.put("brakeLight", brakeLight);
+                                valMap12.put("carLight",carLight);
+                                valMap12.put("warmLight",warmLight);
+                                valMap12.put("turnLight",turnLight);
+                                valMap12.put("dayRunLight",dayRunLight);
+                                valMap12.put("widthLight",widthLight);
+                                valMap12.put("nearLight",nearLight);
+                                valMap12.put("farLight",farLight);
+                                valMap12.put("frontFogLight",frontFogLight);
+                                valMap12.put("backFogLight",backFogLight);
+                                valMap12.put("brakeLight",brakeLight);
 
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> lightCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_LIGHT,
-                                        valMap12, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_LIGHT), b12);
+                                DataPackCondition.CarCondition<Map<String,Integer>> lightCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_LIGHT,
+                                        valMap12,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_LIGHT),b12);
                                 dataPackCondition.getConditionList().add(lightCdt);
                                 break;
                             case 0x0413://故障灯
                                 byte b13 = itemDataBuf.readByte();
-                                Map<String, Integer> valMap13 = new HashMap<>();
-                                int tpmsTyreLight = b13 & 0b00000011;//TPMS轮胎灯
+                                Map<String,Integer> valMap13 = new HashMap<>();
+                                int tpmsTyreLight  = b13 & 0b00000011;//TPMS轮胎灯
                                 int esStopLight = (b13 & 0b00001100) >>> 2;//ES制动灯
 
-                                valMap13.put("tpmsTyreLight", tpmsTyreLight);
-                                valMap13.put("esStopLight", esStopLight);
+                                valMap13.put("tpmsTyreLight",tpmsTyreLight);
+                                valMap13.put("esStopLight",esStopLight);
 
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> trobleLightCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_TROUBLE_LIGHT,
-                                        valMap13, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_TROUBLE_LIGHT), new byte[]{b13});
+                                DataPackCondition.CarCondition<Map<String,Integer>> trobleLightCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_TROUBLE_LIGHT,
+                                        valMap13,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_TROUBLE_LIGHT), new byte[]{b13} );
                                 dataPackCondition.getConditionList().add(trobleLightCdt);
 
                                 break;
                             case 0x0414://车窗状态
-                                byte[] b14 = new byte[2];
+                                byte [] b14 = new byte[2];
                                 itemDataBuf.readBytes(b14);
 
-                                Map<String, Integer> valMap14 = new HashMap<>();
+                                Map<String,Integer> valMap14 = new HashMap<>();
 
                                 int leftFrontWindow = b14[0] & 0b00000011;//左前窗（0-关窗，1-开窗，2-升窗）
                                 int rightFrontWindow = (b14[0] & 0b00001100) >>> 2;//左前窗
                                 int leftRearWindow = (b14[0] & 0b00110000) >>> 4;//右前窗
-                                int rightRearWindow = (b14[0] & 0b11000000) >>> 6;//左后窗
+                                int rightRearWindow =  (b14[0] & 0b11000000) >>> 6;//左后窗
 
                                 int topWidow = b14[1] & 0b00000011;//天窗
-                                int backWidow = (b14[1] & 0b00001100) >>> 2;//尾窗
+                                int backWidow = (b14[1] & 0b00001100)>>>2;//尾窗
 
-                                valMap14.put("leftFrontWindow", leftFrontWindow);
-                                valMap14.put("rightFrontWindow", rightFrontWindow);
-                                valMap14.put("leftRearWindow", leftRearWindow);
-                                valMap14.put("rightRearWindow", rightRearWindow);
-                                valMap14.put("topWidow", topWidow);
-                                valMap14.put("backWidow", backWidow);
+                                valMap14.put("leftFrontWindow",leftFrontWindow);
+                                valMap14.put("rightFrontWindow",rightFrontWindow);
+                                valMap14.put("leftRearWindow",leftRearWindow);
+                                valMap14.put("rightRearWindow",rightRearWindow);
+                                valMap14.put("topWidow",topWidow);
+                                valMap14.put("backWidow",backWidow);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> windowCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_WINDOW,
-                                        valMap14, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_WINDOW), b14);
+                                DataPackCondition.CarCondition<Map<String,Integer>> windowCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_WINDOW,
+                                        valMap14,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_WINDOW),b14);
                                 dataPackCondition.getConditionList().add(windowCdt);
                                 break;
                             case 0x0415://安全带
-                                byte[] b15 = new byte[2];
+                                byte [] b15 = new byte[2];
                                 itemDataBuf.readBytes(b15);
 
-                                Map<String, Integer> valMap15 = new HashMap<>();
+                                Map<String,Integer> valMap15 = new HashMap<>();
 
                                 int driverSafetyBbelt = b15[0] & 0b00000011;//主驾驶安全带（0-未系，1-已系）
                                 int viceDriverSafetyBbelt = (b15[0] & 0b00001100) >>> 2;//副驾驶安全带
                                 int leftRearSafetyBbelt = (b15[0] & 0b00110000) >>> 4;//后排左安全带
-                                int midRearSafetyBbelt = (b15[0] & 0b11000000) >>> 6;//后排中安全带
+                                int midRearSafetyBbelt =  (b15[0] & 0b11000000) >>> 6;//后排中安全带
 
                                 int rightRearSafetyBbelt = b15[1] & 0b00000011;//后排右安全带
 
-                                valMap15.put("driverSafetyBbelt", driverSafetyBbelt);
-                                valMap15.put("viceDriverSafetyBbelt", viceDriverSafetyBbelt);
-                                valMap15.put("leftRearSafetyBbelt", leftRearSafetyBbelt);
-                                valMap15.put("midRearSafetyBbelt", midRearSafetyBbelt);
-                                valMap15.put("rightRearSafetyBbelt", rightRearSafetyBbelt);
+                                valMap15.put("driverSafetyBbelt",driverSafetyBbelt);
+                                valMap15.put("viceDriverSafetyBbelt",viceDriverSafetyBbelt);
+                                valMap15.put("leftRearSafetyBbelt",leftRearSafetyBbelt);
+                                valMap15.put("midRearSafetyBbelt",midRearSafetyBbelt);
+                                valMap15.put("rightRearSafetyBbelt",rightRearSafetyBbelt);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> safetyBeltCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_SAFETY_BELT,
-                                        valMap15, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_SAFETY_BELT), b15);
+                                DataPackCondition.CarCondition<Map<String,Integer>> safetyBeltCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_SAFETY_BELT,
+                                        valMap15,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_SAFETY_BELT),b15);
                                 dataPackCondition.getConditionList().add(safetyBeltCdt);
                                 break;
                             case 0x0416://空调
                                 byte b16 = itemDataBuf.readByte();
                                 itemDataBuf.readBytes(b16);
 
-                                Map<String, Integer> valMap16 = new HashMap<>();
+                                Map<String,Integer> valMap16 = new HashMap<>();
                                 int airConditionerRunStatus = b16 & 0b00000011;//运行状态 （0-关，1-开）
-                                int airConditionerAirFanStatus = (b16 & 0b00001100) >>> 2; //风扇状态
+                                int airConditionerAirFanStatus = (b16 & 0b00001100) >>> 2 ; //风扇状态
 
 
-                                valMap16.put("airConditionerRunStatus", airConditionerRunStatus);
-                                valMap16.put("airConditionerAirFanStatus", airConditionerAirFanStatus);
+                                valMap16.put("airConditionerRunStatus",airConditionerRunStatus);
+                                valMap16.put("airConditionerAirFanStatus",airConditionerAirFanStatus);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> airConditionerCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_AIR_CONDITIONER,
-                                        valMap16, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_AIR_CONDITIONER), new byte[]{b16});
+                                DataPackCondition.CarCondition<Map<String,Integer>> airConditionerCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_AIR_CONDITIONER,
+                                        valMap16,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_AIR_CONDITIONER), new byte[]{b16});
                                 dataPackCondition.getConditionList().add(airConditionerCdt);
 
                                 break;
 
 
                             case 0x0420://其它
-                                byte[] b20 = new byte[2];
+                                byte [] b20 = new byte[2];
                                 itemDataBuf.readBytes(b20);
 
-                                Map<String, Integer> valMap20 = new HashMap<>();
+                                Map<String,Integer> valMap20 = new HashMap<>();
 
                                 int carPlayer = b20[0] & 0b00000011;//车载影音（0-关，1-开）
                                 int seatHeat = (b20[0] & 0b00001100) >>> 2;//座椅加热（0-关，1-开）
                                 int rearviewMirror = (b20[0] & 0b00110000) >>> 4;//后视镜子（0-关，1-开）
-                                int reverseMonitor = (b20[0] & 0b11000000) >>> 6;//可视倒车屏（0-关，1-开）
+                                int reverseMonitor =  (b20[0] & 0b11000000) >>> 6;//可视倒车屏（0-关，1-开）
 
                                 int remoteControlSound = b20[1] & 0b00000011;//遥控器鸣笛（0-静，1-响）
                                 int driverType = (b20[1] & 0b00001100) >>> 2;//驱动类型（0-手动，1-自动）
                                 int cruiseControlBtn = (b20[1] & 0b00110000) >>> 4;//定速巡航按钮（0-关，1-开）
-                                int clutchStatus = (b20[1] & 0b11000000) >>> 6;//离合器（0-离，1-合）
+                                int clutchStatus =  (b20[1] & 0b11000000) >>> 6;//离合器（0-离，1-合）
 
-                                valMap20.put("carPlayer", carPlayer);
-                                valMap20.put("seatHeat", seatHeat);
-                                valMap20.put("rearviewMirror", rearviewMirror);
-                                valMap20.put("reverseMonitor", reverseMonitor);
-                                valMap20.put("remoteControlSound", remoteControlSound);
-                                valMap20.put("driverType", driverType);
-                                valMap20.put("cruiseControlBtn", cruiseControlBtn);
-                                valMap20.put("clutchStatus", clutchStatus);
+                                valMap20.put("carPlayer",carPlayer);
+                                valMap20.put("seatHeat",seatHeat);
+                                valMap20.put("rearviewMirror",rearviewMirror);
+                                valMap20.put("reverseMonitor",reverseMonitor);
+                                valMap20.put("remoteControlSound",remoteControlSound);
+                                valMap20.put("driverType",driverType);
+                                valMap20.put("cruiseControlBtn",cruiseControlBtn);
+                                valMap20.put("clutchStatus",clutchStatus);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> otherCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_OTHER,
-                                        valMap20, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_OTHER), b20);
+                                DataPackCondition.CarCondition<Map<String,Integer>> otherCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_OTHER,
+                                        valMap20,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_OTHER),b20);
                                 dataPackCondition.getConditionList().add(otherCdt);
                                 break;
                             case 0x0440://剩余油量
-                                byte[] b40 = new byte[2];
+                                byte [] b40 = new byte[2];
                                 itemDataBuf.readBytes(b40);
 
 
                                 int fuelCapacityUnit = (b40[1] & 0b10000000) >>> 7;//单位标识位，0-百分比模式，单位0.1%；1- 0.1L
-                                int fuelCapacity = (b40[1] & 0b01111111) << 8 | (b40[0] & 0xFF);//油量值
+                                int fuelCapacity = (b40[1] & 0b01111111) << 8  | (b40[0] & 0xFF);//油量值
 
-                                Map<String, Integer> valMap40 = new HashMap<>();
-                                valMap40.put("fuelCapacityUnit", fuelCapacityUnit);
-                                valMap40.put("fuelCapacity", fuelCapacity);
+                                Map<String,Integer> valMap40 = new HashMap<>();
+                                valMap40.put("fuelCapacityUnit",fuelCapacityUnit);
+                                valMap40.put("fuelCapacity",fuelCapacity);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> fuelCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_OIL_REMAIN,
-                                        valMap40, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_OIL_REMAIN), b40);
+                                DataPackCondition.CarCondition<Map<String,Integer>> fuelCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_OIL_REMAIN,
+                                        valMap40,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_OIL_REMAIN),b40);
                                 dataPackCondition.getConditionList().add(fuelCdt);
                                 break;
                             case 0x0441://仪表里程 单位 ：公里
-                                byte[] b41 = new byte[2];
+                                byte [] b41 = new byte[2];
                                 itemDataBuf.readBytes(b41);
                                 int odometerNum = (b41[0] & 0xFF) << 8 | (b41[1] & 0xFF);
                                 DataPackCondition.CarCondition<Integer> odometerNumCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_ODOMETER_NUM,
-                                        odometerNum, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ODOMETER_NUM), b41);
+                                        odometerNum,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ODOMETER_NUM),b41);
                                 dataPackCondition.getConditionList().add(odometerNumCdt);
                                 break;
                             case 0x0442://VIN码
                                 byte[] b42 = new byte[18];
                                 itemDataBuf.readBytes(b42);
-                                String vin = new String(b42, 0, 17, "UTF-8");
-                                System.out.println("%%%%%%%%%%vin=" + vin);
+                                String vin = new String(b42,0,17,"UTF-8");
+                                System.out.println("%%%%%%%%%%vin="+vin);
 
                                 DataPackCondition.CarCondition<String> vinCdt = new DataPackCondition.CarCondition<String>(DataPackCondition.CONDITIONNAME_VIN,
-                                        vin, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_VIN), b42);
+                                        vin,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_VIN),b42);
                                 dataPackCondition.getConditionList().add(vinCdt);
                                 break;
                             case 0x0443://转速  单位 ：RPM（转/分）
                                 byte[] b43 = new byte[2];
                                 itemDataBuf.readBytes(b43);
-                                int rotateSpeed = (b43[0] & 0xFF) << 8 | (b43[1] & 0xFF);
+                                int rotateSpeed = (b43[0] &  0xFF) << 8 | (b43[1] & 0xFF);
 
                                 DataPackCondition.CarCondition<Integer> rotateSpeedCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_ROTATE_SPEED,
-                                        rotateSpeed, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ROTATE_SPEED), b43);
+                                        rotateSpeed,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ROTATE_SPEED),b43);
                                 dataPackCondition.getConditionList().add(rotateSpeedCdt);
                                 break;
                             case 0x0444://车速 单位 ：10m/h （10米/小时）
-                                byte[] b44 = new byte[2];
+                                byte [] b44 = new byte[2];
                                 itemDataBuf.readBytes(b44);
-                                int speed = (b44[0] & 0xFF) << 8 | (b44[1] & 0xFF);
+                                int speed = (b44[0] &  0xFF) << 8 | (b44[1] & 0xFF);
 
                                 DataPackCondition.CarCondition<Integer> speedCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_SPEED,
-                                        speed, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_SPEED), b44);
+                                        speed,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_SPEED),b44);
                                 dataPackCondition.getConditionList().add(speedCdt);
                                 break;
                             case 0x0445://续航里程   单位 ：公里
-                                byte[] b45 = new byte[2];
+                                byte [] b45 = new byte[2];
                                 itemDataBuf.readBytes(b45);
-                                int nedc = (b45[0] & 0xFF) << 8 | (b45[1] & 0xFF);
+                                int nedc = (b45[0] &  0xFF) << 8 | (b45[1] & 0xFF);
 
                                 DataPackCondition.CarCondition<Integer> nedcCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_NEDC,
-                                        nedc, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_NEDC), b45);
+                                        nedc,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_NEDC),b45);
                                 dataPackCondition.getConditionList().add(nedcCdt);
                                 break;
                             case 0x0446://平均油耗
-                                byte[] b46 = new byte[2];
+                                byte [] b46 = new byte[2];
                                 itemDataBuf.readBytes(b46);
 
 
                                 int aveFuelConsumptionUnit = (b46[1] & 0b10000000) >>> 7;//单位标识位，0-升/时（L/H）；1-升/十公里（L/10KM）
-                                int aveFuelConsumption = (b46[1] & 0b01111111) << 8 | (b46[0] & 0xFF);//油量值
+                                int aveFuelConsumption = (b46[1] & 0b01111111) << 8  | (b46[0] & 0xFF);//油量值
 
-                                Map<String, Integer> valMap46 = new HashMap<>();
-                                valMap46.put("aveFuelConsumptionUnit", aveFuelConsumptionUnit);
-                                valMap46.put("fuelCapacity", aveFuelConsumption);
+                                Map<String,Integer> valMap46 = new HashMap<>();
+                                valMap46.put("aveFuelConsumptionUnit",aveFuelConsumptionUnit);
+                                valMap46.put("fuelCapacity",aveFuelConsumption);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> aveFuelConsumptionCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_AVE_FUEL_CONSUMPTION,
-                                        valMap46, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_AVE_FUEL_CONSUMPTION), b46);
+                                DataPackCondition.CarCondition<Map<String,Integer>> aveFuelConsumptionCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_AVE_FUEL_CONSUMPTION,
+                                        valMap46,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_AVE_FUEL_CONSUMPTION),b46);
                                 dataPackCondition.getConditionList().add(aveFuelConsumptionCdt);
                                 break;
                             case 0x0447://瞬时油耗
-                                byte[] b47 = new byte[2];
+                                byte [] b47 = new byte[2];
                                 itemDataBuf.readBytes(b47);
 
 
                                 int unit47 = (b47[1] & 0b10000000) >>> 7;//单位标识位，0-升/时（L/H）；1-升/十公里（L/10KM）
-                                int instantFuelConsumption = (b47[1] & 0b01111111) << 8 | (b47[0] & 0xFF);//油量值
+                                int instantFuelConsumption = (b47[1] & 0b01111111) << 8  | (b47[0] & 0xFF);//油量值
 
-                                Map<String, Integer> valMap47 = new HashMap<>();
-                                valMap47.put("unit", unit47);
-                                valMap47.put("fuelCapacity", instantFuelConsumption);
+                                Map<String,Integer> valMap47 = new HashMap<>();
+                                valMap47.put("unit",unit47);
+                                valMap47.put("fuelCapacity",instantFuelConsumption);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> instantFuelConsumptionCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_INSTANT_FUEL_CONSUMPTION,
-                                        valMap47, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_INSTANT_FUEL_CONSUMPTION), b47);
+                                DataPackCondition.CarCondition<Map<String,Integer>> instantFuelConsumptionCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_INSTANT_FUEL_CONSUMPTION,
+                                        valMap47,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_INSTANT_FUEL_CONSUMPTION),b47);
                                 dataPackCondition.getConditionList().add(instantFuelConsumptionCdt);
                                 break;
                             case 0x0448://行驶时间  单位 ：分
-                                byte[] b48 = new byte[2];
+                                byte [] b48 = new byte[2];
                                 itemDataBuf.readBytes(b48);
-                                int runTime = (b48[0] & 0xFF) << 8 | (b48[1] & 0xFF);
+                                int runTime = (b48[0] &  0xFF) << 8 | (b48[1] & 0xFF);
 
                                 DataPackCondition.CarCondition<Integer> runTimeCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_RUN_TIME,
-                                        runTime, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_RUN_TIME), b48);
+                                        runTime,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_RUN_TIME),b48);
                                 dataPackCondition.getConditionList().add(runTimeCdt);
                                 break;
                             case 0x044A://方向盘转角 单位 ：0.1度（-5400，+ 5400）
-                                byte[] b4A = new byte[2];
+                                byte [] b4A = new byte[2];
                                 itemDataBuf.readBytes(b4A);
-                                int wheelCorner = ((b4A[0] & 0xFF) << 8 | (b4A[1] & 0xFF)) << 16 >> 16;//先转为int，再左移16位后带符号右移16位
+                                int wheelCorner = ((b4A[0] & 0xFF) << 8 | (b4A[1] & 0xFF)) << 16 >>16 ;//先转为int，再左移16位后带符号右移16位
 
                                 DataPackCondition.CarCondition<Integer> wheelCornerCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_WHEEL_CORNER,
-                                        wheelCorner, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_WHEEL_CORNER), b4A);
+                                        wheelCorner,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_WHEEL_CORNER),b4A);
                                 dataPackCondition.getConditionList().add(wheelCornerCdt);
                                 break;
                             case 0x044B:// 轮速   单位 ：10m/h（10米/小时）
@@ -986,96 +988,96 @@ public class DataParserLanduUbi implements IDataParser {
                                 int leftRearTyreSpeed = (b4B[4] & 0xFF) << 8 | (b4B[5] & 0xFF);
                                 int rightRearTyreSpeed = (b4B[6] & 0xFF) << 8 | (b4B[7] & 0xFF);
 
-                                Map<String, Integer> valMap4B = new HashMap<>();
-                                valMap4B.put("leftFrontTyreSpeed", leftFrontTyreSpeed);
-                                valMap4B.put("rightFrontTyreSpeed", rightFrontTyreSpeed);
-                                valMap4B.put("leftRearTyreSpeed", leftRearTyreSpeed);
-                                valMap4B.put("rightRearTyreSpeed", rightRearTyreSpeed);
+                                Map<String,Integer> valMap4B = new HashMap<>();
+                                valMap4B.put("leftFrontTyreSpeed",leftFrontTyreSpeed);
+                                valMap4B.put("rightFrontTyreSpeed",rightFrontTyreSpeed);
+                                valMap4B.put("leftRearTyreSpeed",leftRearTyreSpeed);
+                                valMap4B.put("rightRearTyreSpeed",rightRearTyreSpeed);
 
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> typeSpeedCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_TYRE_SPEED,
-                                        valMap4B, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_TYRE_SPEED), b4B);
+                                DataPackCondition.CarCondition<Map<String,Integer>> typeSpeedCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_TYRE_SPEED,
+                                        valMap4B,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_TYRE_SPEED),b4B);
                                 dataPackCondition.getConditionList().add(typeSpeedCdt);
                                 break;
                             case 0x044D://TODO??? 胎压   单位 ：0.1bar
-                                byte[] b4D = new byte[4];
-                                int leftFrontTyrePressure = b4D[0];
-                                int rightFrontTyrePressure = b4D[1];
-                                int leftRearTyrePressure = b4D[2];
-                                int rightRearTyrePressure = b4D[3];
+                                byte [] b4D = new  byte[4];
+                                int leftFrontTyrePressure =  b4D[0];
+                                int rightFrontTyrePressure =  b4D[1];
+                                int leftRearTyrePressure =  b4D[2];
+                                int rightRearTyrePressure =  b4D[3];
 
-                                Map<String, Integer> valMap4D = new HashMap<>();
-                                valMap4D.put("leftFrontTyrePressure", leftFrontTyrePressure);
-                                valMap4D.put("rightFrontTyrePressure", rightFrontTyrePressure);
-                                valMap4D.put("leftRearTyrePressure", leftRearTyrePressure);
-                                valMap4D.put("rightRearTyrePressure", rightRearTyrePressure);
+                                Map<String,Integer> valMap4D = new HashMap<>();
+                                valMap4D.put("leftFrontTyrePressure",leftFrontTyrePressure);
+                                valMap4D.put("rightFrontTyrePressure",rightFrontTyrePressure);
+                                valMap4D.put("leftRearTyrePressure",leftRearTyrePressure);
+                                valMap4D.put("rightRearTyrePressure",rightRearTyrePressure);
 
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> typePressureCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_TYRE_PRESSURE,
-                                        valMap4D, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_TYRE_PRESSURE), b4D);
+                                DataPackCondition.CarCondition<Map<String,Integer>> typePressureCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_TYRE_PRESSURE,
+                                        valMap4D,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_TYRE_PRESSURE),b4D);
                                 dataPackCondition.getConditionList().add(typePressureCdt);
                                 break;
 
 
                             case 0x044E://动力电流  单位 ：0.1A
-                                byte[] b4E = new byte[2];
+                                byte [] b4E = new byte[2];
                                 itemDataBuf.readBytes(b4E);
-                                int powerElectricity = (b4E[0] & 0xFF) << 8 | (b4E[1] & 0xFF);
+                                int powerElectricity = (b4E[0] &  0xFF) << 8 | (b4E[1] & 0xFF);
 
                                 DataPackCondition.CarCondition<Integer> powerElectricityVoltageCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_POWER_ELECTRICITY,
-                                        powerElectricity, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_POWER_ELECTRICITY), b4E);
+                                        powerElectricity,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_POWER_ELECTRICITY),b4E);
                                 dataPackCondition.getConditionList().add(powerElectricityVoltageCdt);
 
                                 break;
 
                             case 0x044F://电池电压  单位 ：0.1V
-                                byte[] b4F = new byte[2];
+                                byte [] b4F = new byte[2];
                                 itemDataBuf.readBytes(b4F);
-                                int batteryVoltage = (b4F[0] & 0xFF) << 8 | (b4F[1] & 0xFF);
+                                int batteryVoltage = (b4F[0] &  0xFF) << 8 | (b4F[1] & 0xFF);
 
                                 DataPackCondition.CarCondition<Integer> batteryVoltageCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_BATTERY_VOLTAGE,
-                                        batteryVoltage, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_BATTERY_VOLTAGE), b4F);
+                                        batteryVoltage,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_BATTERY_VOLTAGE),b4F);
                                 dataPackCondition.getConditionList().add(batteryVoltageCdt);
                                 break;
                             case 0x0470://剩余电量  百分比（单位：1）
                                 byte b70 = itemDataBuf.readByte();
                                 int electricRemian = b70;
                                 DataPackCondition.CarCondition<Integer> electricRemianCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_ELECTRIC_REMIAN,
-                                        electricRemian, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ELECTRIC_REMIAN), new byte[]{b70});
+                                        electricRemian,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ELECTRIC_REMIAN),new byte[]{b70});
                                 dataPackCondition.getConditionList().add(electricRemianCdt);
                                 break;
                             case 0x0471://油门位置  百分比（单位：1）
                                 byte b71 = itemDataBuf.readByte();
                                 int gaunPosition = b71;
                                 DataPackCondition.CarCondition<Integer> gaunPositionCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_GAUN_POSITION,
-                                        gaunPosition, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_GAUN_POSITION), new byte[]{b71});
+                                        gaunPosition,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_GAUN_POSITION),new byte[]{b71});
                                 dataPackCondition.getConditionList().add(gaunPositionCdt);
                                 break;
                             case 0x0472://尾门开度  百分比（单位：1）
                                 byte b72 = itemDataBuf.readByte();
                                 int tailOpen = b72;
                                 DataPackCondition.CarCondition<Integer> tailOpenCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_TAIL_OPEN,
-                                        tailOpen, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_TAIL_OPEN), new byte[]{b72});
+                                        tailOpen,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_TAIL_OPEN),new byte[]{b72});
                                 dataPackCondition.getConditionList().add(tailOpenCdt);
                                 break;
                             case 0x0473://刹车踏板力度  百分比（单位：1）
-                                byte[] b73 = new byte[2];
+                                byte [] b73 = new byte[2];
                                 itemDataBuf.readBytes(b73);
                                 int brakeForce1 = b73[0];
                                 int brakeForce2 = b73[1];
-                                Map<String, Integer> valMap73 = new HashMap<>(2);
-                                valMap73.put("brakeForce1", brakeForce1);
-                                valMap73.put("brakeForce2", brakeForce2);
+                                Map<String,Integer> valMap73 = new HashMap<>(2);
+                                valMap73.put("brakeForce1",brakeForce1);
+                                valMap73.put("brakeForce2",brakeForce2);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> brakeForceCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_BRAKE_FORCE,
-                                        valMap73, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_BRAKE_FORCE), b73);
+                                DataPackCondition.CarCondition<Map<String,Integer>> brakeForceCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_BRAKE_FORCE,
+                                        valMap73,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_BRAKE_FORCE),b73);
                                 dataPackCondition.getConditionList().add(brakeForceCdt);
                                 break;
                             case 0x0474://节气门开度 百分比（单位：1）
                                 byte b74 = itemDataBuf.readByte();
                                 int throttleValve = b74;
                                 DataPackCondition.CarCondition<Integer> throttleValveCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_THROTTLE_VALVE,
-                                        throttleValve, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_THROTTLE_VALVE), new byte[]{b74});
+                                        throttleValve,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_THROTTLE_VALVE),new byte[]{b74});
                                 dataPackCondition.getConditionList().add(throttleValveCdt);
                                 break;
 
@@ -1083,39 +1085,39 @@ public class DataParserLanduUbi implements IDataParser {
                                 byte b80 = itemDataBuf.readByte();
                                 int brake1Status = (b80 & 0b11110000) >>> 4;
                                 int brake2Status = b80 & 0b00001111;
-                                Map<String, Integer> valMap80 = new HashMap<>(2);
-                                valMap80.put("brake1Status", brake1Status);
-                                valMap80.put("brake2Status", brake2Status);
+                                Map<String,Integer> valMap80 = new HashMap<>(2);
+                                valMap80.put("brake1Status",brake1Status);
+                                valMap80.put("brake2Status",brake2Status);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> brakeStatusCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_BRAKE_STATUS,
-                                        valMap80, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_BRAKE_STATUS), new byte[]{b80});
+                                DataPackCondition.CarCondition<Map<String,Integer>> brakeStatusCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_BRAKE_STATUS,
+                                        valMap80,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_BRAKE_STATUS),new byte []{b80});
                                 dataPackCondition.getConditionList().add(brakeStatusCdt);
                                 break;
                             case 0x0481://助刹状态 0-松开， 1-脚刹踩下、手刹拉起、电子按下
                                 byte b81 = itemDataBuf.readByte();
                                 int viceBrakeStatus = b81 & 0b00001111;
                                 DataPackCondition.CarCondition<Integer> viceBrakeStatusCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_VICE_BRAKE_STATUS,
-                                        viceBrakeStatus, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_VICE_BRAKE_STATUS), new byte[]{b81});
+                                        viceBrakeStatus,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_VICE_BRAKE_STATUS),new byte []{b81});
                                 dataPackCondition.getConditionList().add(viceBrakeStatusCdt);
                                 break;
                             case 0x0482://油门状态  0-松开，1-踩下
                                 byte b82 = itemDataBuf.readByte();
                                 int acceleratorStatus = b82 & 0b00001111;
                                 DataPackCondition.CarCondition<Integer> acceleratorStatusCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_ACCELERATOR_STATUS,
-                                        acceleratorStatus, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ACCELERATOR_STATUS), new byte[]{b82});
+                                        acceleratorStatus,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_ACCELERATOR_STATUS),new byte []{b82});
                                 dataPackCondition.getConditionList().add(acceleratorStatusCdt);
                                 break;
                             case 0x0483://雨刮器状态
                                 byte b83 = itemDataBuf.readByte();
-                                int frontWindscreenWiper = (b83 & 0b1111000) >>> 4;
+                                int frontWindscreenWiper =  (b83 & 0b1111000) >>> 4;
                                 int rearWindscreenWiper = b83 & 0b00001111;
 
-                                Map<String, Integer> valMap83 = new HashMap<>(2);
-                                valMap83.put("frontWindscreenWiper", frontWindscreenWiper);
-                                valMap83.put("rearWindscreenWiper", rearWindscreenWiper);
+                                Map<String,Integer> valMap83 = new HashMap<>(2);
+                                valMap83.put("frontWindscreenWiper",frontWindscreenWiper);
+                                valMap83.put("rearWindscreenWiper",rearWindscreenWiper);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> windscreenWiperCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_WINDSCREEN_WIPER,
-                                        valMap83, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_WINDSCREEN_WIPER), new byte[]{b83});
+                                DataPackCondition.CarCondition<Map<String,Integer>> windscreenWiperCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_WINDSCREEN_WIPER,
+                                        valMap83,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_WINDSCREEN_WIPER),new byte []{b83});
                                 dataPackCondition.getConditionList().add(windscreenWiperCdt);
                                 break;
                             case 0x0484://充电枪状态
@@ -1123,7 +1125,7 @@ public class DataParserLanduUbi implements IDataParser {
                                 int evCharger = b84;
 
                                 DataPackCondition.CarCondition<Integer> evChargerCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_EV_CHARGER,
-                                        evCharger, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_EV_CHARGER), new byte[]{b84});
+                                        evCharger,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_EV_CHARGER),new byte []{b84});
                                 dataPackCondition.getConditionList().add(evChargerCdt);
                                 break;
                             case 0x0485://充电状态 0-未充电，1-正在充电，2-充电完成
@@ -1131,7 +1133,7 @@ public class DataParserLanduUbi implements IDataParser {
                                 int chargerStatus = b85 & 0b00001111;
 
                                 DataPackCondition.CarCondition<Integer> chargerStatusCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_CHARGER_STATUS,
-                                        chargerStatus, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_CHARGER_STATUS), new byte[]{b85});
+                                        chargerStatus,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_CHARGER_STATUS),new byte []{b85});
                                 dataPackCondition.getConditionList().add(chargerStatusCdt);
                                 break;
                             case 0x0486://行驶状态（方向）  0-驻车，1-后退，2-停止，3-前进
@@ -1139,30 +1141,30 @@ public class DataParserLanduUbi implements IDataParser {
                                 int runStatus = b86 & 0b00001111;
 
                                 DataPackCondition.CarCondition<Integer> runStatusCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_RUN_STATUS,
-                                        runStatus, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_RUN_STATUS), new byte[]{b86});
+                                        runStatus,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_RUN_STATUS),new byte []{b86});
                                 dataPackCondition.getConditionList().add(runStatusCdt);
                                 break;
                             case 0x0487://升窗档次  档次 （百分比）
-                                byte[] b87 = new byte[6];
+                                byte [] b87 = new byte[6];
                                 itemDataBuf.readBytes(b87);
 
-                                int leftFrontWindowLiftLevel = b87[0];
-                                int rightFrontWindowLiftLevel = b87[1];
-                                int leftRearWindowLiftLevel = b87[2];
-                                int rightRearWindowLiftLevel = b87[3];
-                                int topWindowLiftLevel = b87[4];
-                                int tailWindowLiftLevel = b87[5];
+                                int leftFrontWindowLiftLevel =  b87[0];
+                                int rightFrontWindowLiftLevel =  b87[1];
+                                int leftRearWindowLiftLevel =  b87[2];
+                                int rightRearWindowLiftLevel =  b87[3];
+                                int topWindowLiftLevel =  b87[4];
+                                int tailWindowLiftLevel =  b87[5];
 
-                                Map<String, Integer> valMap87 = new HashMap<>(6);
-                                valMap87.put("leftFrontWindowLiftLevel", leftFrontWindowLiftLevel);
-                                valMap87.put("rightFrontWindowLiftLevel", rightFrontWindowLiftLevel);
-                                valMap87.put("leftRearWindowLiftLevel", leftRearWindowLiftLevel);
-                                valMap87.put("rightRearWindowLiftLevel", rightRearWindowLiftLevel);
-                                valMap87.put("topWindowLiftLevel", topWindowLiftLevel);
-                                valMap87.put("tailWindowLiftLevel", tailWindowLiftLevel);
+                                Map<String,Integer> valMap87 = new HashMap<>(6);
+                                valMap87.put("leftFrontWindowLiftLevel",leftFrontWindowLiftLevel);
+                                valMap87.put("rightFrontWindowLiftLevel",rightFrontWindowLiftLevel);
+                                valMap87.put("leftRearWindowLiftLevel",leftRearWindowLiftLevel);
+                                valMap87.put("rightRearWindowLiftLevel",rightRearWindowLiftLevel);
+                                valMap87.put("topWindowLiftLevel",topWindowLiftLevel);
+                                valMap87.put("tailWindowLiftLevel",tailWindowLiftLevel);
 
-                                DataPackCondition.CarCondition<Map<String, Integer>> windowLiftLevelCdt = new DataPackCondition.CarCondition<Map<String, Integer>>(DataPackCondition.CONDITIONNAME_WINDOW_LIFT_LEVEL,
-                                        valMap87, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_WINDOW_LIFT_LEVEL), b87);
+                                DataPackCondition.CarCondition<Map<String,Integer>> windowLiftLevelCdt = new DataPackCondition.CarCondition<Map<String,Integer>>(DataPackCondition.CONDITIONNAME_WINDOW_LIFT_LEVEL,
+                                        valMap87,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_WINDOW_LIFT_LEVEL),b87);
                                 dataPackCondition.getConditionList().add(windowLiftLevelCdt);
                                 break;
                             case 0x0488://就绪状态  0-未就绪，1-就绪
@@ -1170,7 +1172,7 @@ public class DataParserLanduUbi implements IDataParser {
                                 int readyStatus = b88;
 
                                 DataPackCondition.CarCondition<Integer> readyStatusCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_READY_STATUS,
-                                        readyStatus, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_READY_STATUS), new byte[]{b88});
+                                        readyStatus,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_READY_STATUS),new byte []{b88});
                                 dataPackCondition.getConditionList().add(readyStatusCdt);
                                 break;
                             case 0x0489://保养状态 0-不需保养，1-需要保养
@@ -1178,7 +1180,7 @@ public class DataParserLanduUbi implements IDataParser {
                                 int upKeepStatus = b89;
 
                                 DataPackCondition.CarCondition<Integer> upKeepStatusCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_UPKEEP_STATUS,
-                                        upKeepStatus, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_UPKEEP_STATUS), new byte[]{b89});
+                                        upKeepStatus,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_UPKEEP_STATUS),new byte []{b89});
                                 dataPackCondition.getConditionList().add(upKeepStatusCdt);
                                 break;
                             case 0x048D://空调风扇档次 1-1档，2-2档，3-3档，4-4档，5-5档，6-6档，7-7档，8-8档
@@ -1186,18 +1188,18 @@ public class DataParserLanduUbi implements IDataParser {
                                 int airConditionerFanLevel = b8D & 0x0F;
 
                                 DataPackCondition.CarCondition<Integer> airConditionerFanLevelCdt = new DataPackCondition.CarCondition<Integer>(DataPackCondition.CONDITIONNAME_AIR_CONDITIONER_FAN_LEVEL,
-                                        airConditionerFanLevel, DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_AIR_CONDITIONER_FAN_LEVEL), new byte[]{b8D});
+                                        airConditionerFanLevel,DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_AIR_CONDITIONER_FAN_LEVEL),new byte []{b8D});
                                 dataPackCondition.getConditionList().add(airConditionerFanLevelCdt);
                                 break;
 
                             case 0x04A0:// 自定义透传数据
                                 int len = itemDataBuf.readableBytes();
-                                byte[] bA0 = new byte[len - 1];
+                                byte [] bA0 = new byte[len -1];
                                 itemDataBuf.readBytes(bA0);
                                 System.out.println("自定义透传数据" + ByteBufUtil.hexDump(bA0));
 
                                 DataPackCondition.CarCondition<String> costomDataCdt = new DataPackCondition.CarCondition<String>(DataPackCondition.CONDITIONNAME_COSTOM_DATA,
-                                        Base64.getEncoder().encodeToString(bA0), DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_COSTOM_DATA), bA0);
+                                        Base64.getEncoder().encodeToString(bA0),DataPackCondition.getConditionDesc(DataPackCondition.CONDITIONNAME_COSTOM_DATA),bA0);
                                 dataPackCondition.getConditionList().add(costomDataCdt);
                                 break;
 
@@ -1332,11 +1334,11 @@ public class DataParserLanduUbi implements IDataParser {
 
                     }//end while
 
-                    if (null != signTypeObj) {
+                    if(null != signTypeObj){
                         dataPackTargetList.add(new DataPackTarget(signTypeObj));
                     }
 
-                    if (null != signInfo) {
+                    if(null != signInfo){
                         dataPackTargetList.add(new DataPackTarget(signInfo));
                     }
 
@@ -1375,12 +1377,6 @@ public class DataParserLanduUbi implements IDataParser {
 
         return null;
     }
-
-
-    /**
-     * vin码的正则表达式
-     */
-    private static final String VIN_REG = "^[0-9A-Z]{17}$";
 
     @Override
     public Map<String, Object> getMetaData(ByteBuf buffer) {

@@ -12,6 +12,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * LANDU Parser.
@@ -1054,6 +1055,11 @@ public class DataParserLandu implements IDataParser {
         return dataPackTargetList;
     }
 
+    /**
+     * vin码的正则表达式
+     */
+    private static final String VIN_REG = "^[0-9A-Z]{17}$";
+
     @Override
     public Map<String, Object> getMetaData(ByteBuf buffer) {
         Map<String, Object> metaDataMap = new HashMap<>();
@@ -1092,7 +1098,11 @@ public class DataParserLandu implements IDataParser {
             LanduDataPackUtil.readString(buffer);
 
             // 4.VIN
-            metaDataMap.put("vin", LanduDataPackUtil.readString(buffer));
+            String s = LanduDataPackUtil.readString(buffer);
+
+            if (Pattern.matches(VIN_REG, s)) {
+                metaDataMap.put("vin", s);
+            }
 
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();

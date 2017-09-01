@@ -106,7 +106,7 @@ public class DataParserLanduTest {
         buffer.release();
     }
 
-    @Test
+//    @Test
     public void testExtract() throws Exception {
         IDataParser parser = new DataParserLandu();
         List<DataPack> dataPackList = parser.extract(buffer);
@@ -117,7 +117,7 @@ public class DataParserLanduTest {
         }
     }
 
-    @Test
+//    @Test
     public void testCreateResponse() {
         IDataParser parser = new DataParserLandu();
         ByteBuf responseBuf = parser.createResponse(parser.extract(buffer).get(0), ERespReason.OK);
@@ -125,7 +125,7 @@ public class DataParserLanduTest {
         Assert.assertEquals("AA55000BFFF40005160100021A", DatatypeConverter.printHexBinary(ByteBufUtil.getBytes(responseBuf, 0, responseBuf.readableBytes())));
     }
 
-    @Test
+//    @Test
     public void testCreateResponse0x1603() throws Exception {
         IDataParser parser = new DataParserLandu();
         ByteBuf respBuffer = parser.createResponse(parser.extract(buffer).get(2), ERespReason.OK);
@@ -203,7 +203,7 @@ public class DataParserLanduTest {
         }
     }
 
-    @Test
+//    @Test
     public void testGetMetaData() throws Exception {
         IDataParser parser = new DataParserLandu();
         Map<String, Object> metaDataMap = parser.getMetaData(buffer);

@@ -12,6 +12,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * LANDU Parser.
@@ -42,6 +43,11 @@ public class DataParserLandu implements IDataParser {
      * 数据包准许最大容量2M
      */
     private static final int DISCARDS_MAX_LENGTH = 1024 * 1024 * 2;
+
+    /**
+     * vin码的正则表达式
+     */
+    private static final String VIN_REG = "^[0-9A-Z]{17}$";
 
     /**
      * 验证数据包
@@ -83,12 +89,12 @@ public class DataParserLandu implements IDataParser {
     public List<DataPack> extract(ByteBuf buffer){
         /**
          * ## LANDU数据包格式 ##
-         * 0,1: 数据包标志(AA55)
-         * 2,3: 数据包长度
-         * 4,5: 数据包长度校验(数据包长度取反)
-         * 6: 数据包ID
-         * 7: 保留字节(协议格式版本, v2.05-0x02, v3.08-0x05)
-         * ...: 数据内容(其长度为【数据包长度】– 4 – 2)
+         * 0,1: 数据包标志(AA55  2个字节)
+         * 2,3: 数据包长度，包括从【数据包长度】起至【校验和】止的所有字节数量，不是整个包的长度(2个字节)
+         * 4,5: 数据包长度校验(数据包长度取反   2个字节)
+         * 6: 数据包ID  (1个字节)
+         * 7: 保留字节(协议格式版本, v2.05-0x02, v3.08-0x05     1个字节)
+         * ...: 数据内容(其长度为【数据包长度】– 4 – 2   不定长度)
          * 最后2字节: 校验和(【数据包长度】开始至全部【数据内容】结束止的所有字节产累加之和)
          */
         DataPack dataPack;
@@ -153,6 +159,12 @@ public class DataParserLandu implements IDataParser {
                                 buffer.skipBytes(length + 2);
                             }
                             //System.out.printf("| sum: %d, sumCheck: %d ", sum, sumCheck);
+                        }else{
+                            //包长度不够，有以下两种情况
+                            // 1、可能是tcp拆包引起的半个包情况，直接跳出循环结束此次解析,等缓存区积累够了再解析
+                            // 2、包体里面含有 AA 55而且AA 55 后面的4个字节能通过数据包长度校验 导致解析出错,这种情况有可能会误伤后面的正常包，
+                            // 但这种情况概率极小，所以这里直接跳出循环结束此次解析，等缓存区积累够了再当成“正常包”解析，会在第二步解析不到数据直接丢弃
+                            break;
                         }
                     }
                 }
@@ -1048,6 +1060,8 @@ public class DataParserLandu implements IDataParser {
         return dataPackTargetList;
     }
 
+
+
     @Override
     public Map<String, Object> getMetaData(ByteBuf buffer) {
         Map<String, Object> metaDataMap = new HashMap<>();
@@ -1086,7 +1100,11 @@ public class DataParserLandu implements IDataParser {
             LanduDataPackUtil.readString(buffer);
 
             // 4.VIN
-            metaDataMap.put("vin", LanduDataPackUtil.readString(buffer));
+            String s = LanduDataPackUtil.readString(buffer);
+
+            if (Pattern.matches(VIN_REG, s)) {
+                metaDataMap.put("vin", s);
+            }
 
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();

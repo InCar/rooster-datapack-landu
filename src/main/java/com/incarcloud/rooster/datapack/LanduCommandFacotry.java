@@ -2,6 +2,8 @@ package com.incarcloud.rooster.datapack;/**
  * Created by fanbeibei on 2017/7/21.
  */
 
+import com.incarcloud.rooster.gather.cmd.CommandFacotryManager;
+import com.incarcloud.rooster.gather.cmd.CommandFactory;
 import com.incarcloud.rooster.gather.cmd.CommandType;
 import io.netty.buffer.ByteBuf;
 

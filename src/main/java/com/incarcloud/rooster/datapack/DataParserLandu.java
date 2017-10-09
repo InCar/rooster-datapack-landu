@@ -463,7 +463,7 @@ public class DataParserLandu implements IDataParser {
                                 Integer averageFuelConsumption = LanduDataPackUtil.readWord(buffer);
                                 dataPackOverview.setCurrentAvgOilUsed(averageFuelConsumption/100F);
                                 // 1.4 累计行驶里程
-                                dataPackOverview.setMileage(LanduDataPackUtil.readLong(buffer));
+                                dataPackOverview.setMileage(0.0d + LanduDataPackUtil.readLong(buffer));
                                 // 1.5 累计平均油耗
                                 Integer totalAverageFuelConsumption = LanduDataPackUtil.readWord(buffer);
                                 dataPackOverview.setAvgOilUsed(totalAverageFuelConsumption/100F);

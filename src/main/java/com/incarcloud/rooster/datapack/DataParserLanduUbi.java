@@ -1253,7 +1253,7 @@ public class DataParserLanduUbi implements IDataParser {
                                 break;
                             case 0x0607://海拔
                                 int altitude = LanduDataPackUtil.readWord(itemDataBuf);
-                                position.setAltitude(altitude);
+                                position.setAltitude(0.0d + altitude);
                                 break;
                             case 0x0608://GPS速度
                                 int v = LanduDataPackUtil.readByte(itemDataBuf);
@@ -1316,7 +1316,7 @@ public class DataParserLanduUbi implements IDataParser {
                                 break;
                             case 0x0E06://行驶里程
                                 int mileage = (int) LanduDataPackUtil.readDWord(itemDataBuf);
-                                overview.setMileage(mileage);
+                                overview.setMileage(0.0d + mileage);
                                 break;
                         }
 
